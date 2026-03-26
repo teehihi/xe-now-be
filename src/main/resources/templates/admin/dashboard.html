@@ -2,29 +2,37 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - DrivEasy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - XeNow Admin</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <div class="admin-layout">
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="sidebar-brand">🚗 DrivEasy Admin</div>
-        <a class="sidebar-link active" th:href="@{/admin/dashboard}">📊 Dashboard</a>
-        <a class="sidebar-link" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
-        <a class="sidebar-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
-        <a class="sidebar-link" th:href="@{/admin/customers}">👥 Khách hàng</a>
-        <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
-        <form th:action="@{/logout}" method="post" style="margin:1.5rem 1rem 0">
-            <button type="submit" class="btn btn-outline" style="width:100%;color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.2)">Đăng xuất</button>
-        </form>
+        <div class="sidebar-brand">
+            <img th:src="@{/images/logo.webp}" alt="XeNow">
+            Admin
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link active" th:href="@{/admin/dashboard}">📊 Dashboard</a>
+            <a class="sidebar-link" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
+            <a class="sidebar-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
+            <a class="sidebar-link" th:href="@{/admin/customers}">👥 Khách hàng</a>
+            <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
+        </nav>
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-outline-white btn-sm w-full">Đăng xuất</button>
+            </form>
+        </div>
     </div>
 
     <!-- Content -->
     <div class="admin-content">
         <div class="page-header">
-            <div class="page-title">📊 Tổng quan hệ thống</div>
-            <div class="page-subtitle">Thống kê hoạt động cho mượn xe</div>
+            <div class="page-title">Tổng quan hệ thống</div>
+            <div class="page-subtitle">Thống kê hoạt động cho thuê xe</div>
         </div>
 
         <!-- Stats -->
@@ -40,7 +48,7 @@
                 <div class="stat-icon green">✅</div>
                 <div>
                     <div class="stat-value" th:text="${availableVehicles}">0</div>
-                    <div class="stat-label">Xe đang sẵn sàng</div>
+                    <div class="stat-label">Xe sẵn sàng</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -63,7 +71,7 @@
         <div class="card">
             <div class="card-body" style="padding-bottom:0">
                 <div class="d-flex justify-between align-center mb-2">
-                    <strong>📋 Đơn đặt gần đây</strong>
+                    <strong>Đơn đặt gần đây</strong>
                     <a th:href="@{/admin/bookings}" class="btn btn-outline btn-sm">Xem tất cả</a>
                 </div>
             </div>
@@ -87,11 +95,11 @@
                     <td th:text="${b.totalPrice != null ? #numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : '--'}"></td>
                     <td>
                         <span th:switch="${b.status.name()}">
-                            <span th:case="'Pending'" class="badge badge-warning">⏳ Chờ duyệt</span>
-                            <span th:case="'Confirmed'" class="badge badge-info">✅ Xác nhận</span>
-                            <span th:case="'Ongoing'" class="badge badge-purple">🚗 Đang thuê</span>
-                            <span th:case="'Finished'" class="badge badge-success">✔ Xong</span>
-                            <span th:case="'Cancelled'" class="badge badge-danger">✖ Hủy</span>
+                            <span th:case="'Pending'"   class="badge badge-warning">Chờ duyệt</span>
+                            <span th:case="'Confirmed'" class="badge badge-info">Xác nhận</span>
+                            <span th:case="'Ongoing'"   class="badge badge-purple">Đang thuê</span>
+                            <span th:case="'Finished'"  class="badge badge-success">Xong</span>
+                            <span th:case="'Cancelled'" class="badge badge-danger">Hủy</span>
                         </span>
                     </td>
                 </tr>

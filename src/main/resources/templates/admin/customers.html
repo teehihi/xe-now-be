@@ -2,28 +2,50 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Khách hàng - DrivEasy Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khách hàng - XeNow Admin</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <div class="admin-layout">
     <div class="sidebar">
-        <div class="sidebar-brand">🚗 DrivEasy Admin</div>
-        <a class="sidebar-link" th:href="@{/admin/dashboard}">📊 Dashboard</a>
-        <a class="sidebar-link" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
-        <a class="sidebar-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
-        <a class="sidebar-link active" th:href="@{/admin/customers}">👥 Khách hàng</a>
-        <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
+        <div class="sidebar-brand">
+            <img th:src="@{/images/logo.webp}" alt="XeNow">
+            Admin
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" th:href="@{/admin/dashboard}">📊 Dashboard</a>
+            <a class="sidebar-link" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
+            <a class="sidebar-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
+            <a class="sidebar-link active" th:href="@{/admin/customers}">👥 Khách hàng</a>
+            <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
+        </nav>
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-outline-white btn-sm w-full">Đăng xuất</button>
+            </form>
+        </div>
     </div>
+
     <div class="admin-content">
         <div class="page-header">
-            <div class="page-title">👥 Danh sách khách hàng</div>
+            <div class="page-title">Danh sách khách hàng</div>
+            <div class="page-subtitle">Quản lý tài khoản khách hàng</div>
         </div>
+
         <div class="card">
             <div class="card-body" style="padding:0">
                 <table class="table">
                     <thead>
-                    <tr><th>ID</th><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>CCCD</th><th>Bằng lái</th><th>Trạng thái</th></tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Điện thoại</th>
+                        <th>CCCD</th>
+                        <th>Bằng lái</th>
+                        <th>Trạng thái</th>
+                    </tr>
                     </thead>
                     <tbody>
                     <tr th:each="c : ${customers}">
@@ -33,7 +55,10 @@
                         <td th:text="${c.phone}"></td>
                         <td th:text="${c.nationalId}"></td>
                         <td th:text="${c.driverLicense}"></td>
-                        <td><span th:if="${c.active}" class="badge badge-success">Hoạt động</span></td>
+                        <td>
+                            <span th:if="${c.active}" class="badge badge-success">Hoạt động</span>
+                            <span th:unless="${c.active}" class="badge badge-danger">Vô hiệu</span>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

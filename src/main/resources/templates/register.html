@@ -2,59 +2,98 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký - DrivEasy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - XeNow</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<div class="auth-wrapper">
-    <div class="auth-card" style="max-width:500px">
-        <div class="text-center mb-3">
-            <div style="font-size:2.5rem">🆕</div>
-            <h2>Tạo tài khoản</h2>
-            <p class="subtitle">Điền thông tin để đăng ký khách hàng mới</p>
+<div class="auth-page">
+    <!-- Brand side -->
+    <div class="auth-brand">
+        <img class="auth-brand-logo" th:src="@{/images/logo.webp}" alt="XeNow" style="height:56px;object-fit:contain;filter:brightness(0) invert(1)">
+        <h1>Tạo tài khoản</h1>
+        <p>Đăng ký miễn phí và bắt đầu thuê xe ngay hôm nay cùng hàng nghìn khách hàng của XeNow.</p>
+        <ul class="auth-brand-features">
+            <li>🚗 Đặt xe nhanh, thanh toán dễ</li>
+            <li>📍 Nhận xe tại nhiều địa điểm</li>
+            <li>🔒 Thông tin bảo mật tuyệt đối</li>
+            <li>⭐ Ưu đãi dành riêng cho thành viên</li>
+        </ul>
+    </div>
+
+    <!-- Form side -->
+    <div class="auth-form-side">
+        <div class="auth-form-box" style="max-width:480px">
+            <h2>Tạo tài khoản mới</h2>
+            <p class="auth-subtitle">Điền đầy đủ thông tin để hoàn tất đăng ký</p>
+
+            <div th:if="${error}" class="alert alert-danger">
+                ⚠ <span th:text="${error}"></span>
+            </div>
+
+            <form th:action="@{/register}" method="post">
+                <!-- Nhóm 1: Thông tin cơ bản -->
+                <p style="font-size:.8rem;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Thông tin cơ bản</p>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Họ và tên</label>
+                    <input id="name" type="text" name="name" class="form-control" placeholder="Nguyễn Văn A" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input id="email" type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <input id="reg-password" type="password" name="passwordHash" class="form-control"
+                               placeholder="Ít nhất 6 ký tự" required minlength="6">
+                        <button type="button" class="input-icon-right" onclick="togglePassword('reg-password', this)" aria-label="Hiện/ẩn mật khẩu">👁</button>
+                    </div>
+                </div>
+
+                <hr class="hr">
+
+                <!-- Nhóm 2: Thông tin bổ sung -->
+                <p style="font-size:.8rem;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Thông tin bổ sung</p>
+
+                <div class="grid grid-2" style="gap:1rem">
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Số điện thoại</label>
+                        <input id="phone" type="tel" name="phone" class="form-control" placeholder="0912345678">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="nationalId">CCCD</label>
+                        <input id="nationalId" type="text" name="nationalId" class="form-control" placeholder="0123456789">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="driverLicense">Số bằng lái xe</label>
+                        <input id="driverLicense" type="text" name="driverLicense" class="form-control" placeholder="B2-XXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="licenseExpiry">Hạn bằng lái</label>
+                        <input id="licenseExpiry" type="date" name="licenseExpiry" class="form-control">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full" style="margin-top:.5rem">
+                    Đăng ký
+                </button>
+            </form>
+
+            <p class="auth-footer">
+                Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a>
+            </p>
         </div>
-
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-
-        <form th:action="@{/register}" method="post">
-            <div class="form-group">
-                <label class="form-label">Họ và tên</label>
-                <input type="text" name="name" class="form-control" placeholder="Nguyễn Văn A" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Mật khẩu</label>
-                <input type="password" name="passwordHash" class="form-control" placeholder="Ít nhất 6 ký tự" required minlength="6">
-            </div>
-            <div class="grid" style="grid-template-columns:1fr 1fr;gap:1rem">
-                <div class="form-group">
-                    <label class="form-label">Số điện thoại</label>
-                    <input type="tel" name="phone" class="form-control" placeholder="0912345678">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">CCCD</label>
-                    <input type="text" name="nationalId" class="form-control" placeholder="0123456789">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Số bằng lái xe</label>
-                    <input type="text" name="driverLicense" class="form-control" placeholder="B2-XXXXXXXX">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Hạn bằng lái</label>
-                    <input type="date" name="licenseExpiry" class="form-control">
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.75rem">
-                ✅ Đăng ký
-            </button>
-        </form>
-        <p class="text-center mt-2" style="font-size:0.9rem">
-            Đã có tài khoản? <a th:href="@{/login}" style="color:var(--primary)">Đăng nhập</a>
-        </p>
     </div>
 </div>
+
+<script>
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁'; }
+}
+</script>
 </body>
 </html>

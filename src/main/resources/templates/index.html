@@ -2,91 +2,317 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>DrivEasy - Cho mượn xe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XeNow - Thuê xe chất lượng, trải nghiệm đỉnh cao</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 
 <!-- Navbar -->
 <nav class="navbar">
-    <a class="navbar-brand" th:href="@{/}"><span>🚗</span> DrivEasy</a>
+    <a th:href="@{/}">
+        <img th:src="@{/images/logo.webp}" alt="XeNow" style="height:64px;width:auto;object-fit:contain">
+    </a>
     <ul class="navbar-nav">
-        <li><a class="nav-link active" th:href="@{/}">Trang chủ</a></li>
+        <li><a class="nav-link active" th:href="@{/}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Trang chủ
+        </a></li>
         <li sec:authorize="isAuthenticated()">
-            <a class="nav-link" th:href="@{/bookings/my-bookings}">Đơn của tôi</a>
+            <a class="nav-link" th:href="@{/bookings/my-bookings}">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Booking của tôi
+            </a>
+        </li>
+        <li sec:authorize="isAuthenticated()">
+            <a class="nav-link" th:href="#">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Tài khoản
+            </a>
         </li>
         <li sec:authorize="hasRole('MANAGER')">
-            <a class="nav-link" th:href="@{/admin/dashboard}">⚙ Quản lý</a>
-        </li>
-        <li sec:authorize="isAnonymous()">
-            <a class="btn btn-outline btn-sm" th:href="@{/login}">Đăng nhập</a>
-        </li>
-        <li sec:authorize="isAnonymous()">
-            <a class="btn btn-primary btn-sm" th:href="@{/register}">Đăng ký</a>
-        </li>
-        <li sec:authorize="isAuthenticated()">
-            <span class="text-muted" style="font-size:0.85rem;" sec:authentication="name"></span>
+            <a class="btn btn-outline btn-sm" th:href="@{/admin/dashboard}">Admin Panel</a>
         </li>
         <li sec:authorize="isAuthenticated()">
             <form th:action="@{/logout}" method="post" style="margin:0">
                 <button type="submit" class="btn btn-outline btn-sm">Đăng xuất</button>
             </form>
         </li>
+        <li sec:authorize="isAnonymous()">
+            <a class="btn btn-outline btn-sm" th:href="@{/login}">Đăng nhập</a>
+        </li>
+        <li sec:authorize="isAnonymous()">
+            <a class="btn btn-dark btn-sm" th:href="@{/register}">Đăng ký</a>
+        </li>
     </ul>
 </nav>
 
-<!-- Hero -->
-<div class="hero">
-    <div class="container">
-        <h1>🚀 Thuê xe nhanh - Đi xa thoải mái</h1>
-        <p>Hơn 100+ xe đang chờ bạn. Đặt xe chỉ trong vài giây!</p>
-    </div>
-</div>
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">
+            Thuê Xe Chất Lượng<br>
+            <span class="hero-title-gradient">Trải Nghiệm Đỉnh Cao</span>
+        </h1>
+        <p class="hero-subtitle">Đặt xe dễ dàng, lái xe an toàn cùng XeNow - Nền tảng cho thuê xe hàng đầu Việt Nam</p>
 
-<!-- Filter -->
-<div class="container">
-    <div class="filter-bar">
-        <strong>Lọc theo loại xe:</strong>
-        <a class="btn btn-sm" th:classappend="${selectedType == null} ? 'btn-primary' : 'btn-outline'" th:href="@{/}">Tất cả</a>
-        <th:block th:each="type : ${vehicleTypes}">
-            <a class="btn btn-sm"
-               th:classappend="${selectedType != null and selectedType == type.typeId} ? 'btn-primary' : 'btn-outline'"
-               th:href="@{/(typeId=${type.typeId})}"
-               th:text="${type.typeName}">Loại xe</a>
-        </th:block>
+        <!-- Search Bar -->
+        <div class="search-bar" style="width:100%;max-width:860px">
+            <form th:action="@{/}" method="get">
+                <div class="search-bar-inner">
+                    <!-- Địa điểm -->
+                    <div class="search-field">
+                        <div class="search-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                            Địa điểm
+                        </div>
+                        <div class="search-input">
+                            <select name="locationId" style="background:transparent;border:none;outline:none;font-size:14px;font-family:Inter,sans-serif;color:#717182;width:100%;cursor:pointer;appearance:none">
+                                <option value="">Chọn địa điểm</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Ngày nhận -->
+                    <div class="search-field">
+                        <div class="search-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            Ngày nhận xe
+                        </div>
+                        <div class="search-input">
+                            <input type="date" name="startDate" style="background:transparent;border:none;outline:none;font-size:14px;font-family:Inter,sans-serif;color:#717182;width:100%;cursor:pointer">
+                        </div>
+                    </div>
+                    <!-- Ngày trả -->
+                    <div class="search-field">
+                        <div class="search-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            Ngày trả xe
+                        </div>
+                        <div class="search-input">
+                            <input type="date" name="endDate" style="background:transparent;border:none;outline:none;font-size:14px;font-family:Inter,sans-serif;color:#717182;width:100%;cursor:pointer">
+                        </div>
+                    </div>
+                    <!-- Loại xe -->
+                    <div class="search-field">
+                        <div class="search-label">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Loại xe
+                        </div>
+                        <div class="search-input">
+                            <select name="typeId" style="background:transparent;border:none;outline:none;font-size:14px;font-family:Inter,sans-serif;color:#717182;width:100%;cursor:pointer;appearance:none">
+                                <option value="">Tất cả</option>
+                                <option th:each="type : ${vehicleTypes}" th:value="${type.typeId}" th:text="${type.typeName}"
+                                        th:selected="${selectedType != null and selectedType == type.typeId}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Tìm kiếm -->
+                    <div style="display:flex;align-items:flex-end">
+                        <button type="submit" class="search-btn">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
+</section>
 
-    <!-- Alert -->
-    <div th:if="${session.SPRING_SECURITY_LAST_EXCEPTION}" class="alert alert-danger">
-        Vui lòng đăng nhập để đặt xe!
+<!-- Why XeNow Section -->
+<section class="why-section">
+    <div style="text-align:center;margin-bottom:64px">
+        <h2 style="font-size:36px;font-weight:500;color:var(--text-dark);margin-bottom:16px">Tại sao chọn XeNow?</h2>
+        <p style="font-size:18px;color:var(--text-body)">Dịch vụ chuyên nghiệp, uy tín và đáng tin cậy</p>
+    </div>
+    <div class="why-grid">
+        <div class="why-card blue">
+            <div class="why-icon blue">🛡️</div>
+            <h3 class="why-title">Bảo hiểm toàn diện</h3>
+            <p class="why-desc">Xe được bảo hiểm đầy đủ, yên tâm trên mọi hành trình</p>
+        </div>
+        <div class="why-card green">
+            <div class="why-icon green">🎧</div>
+            <h3 class="why-title">Hỗ trợ 24/7</h3>
+            <p class="why-desc">Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn</p>
+        </div>
+        <div class="why-card purple">
+            <div class="why-icon purple">🚗</div>
+            <h3 class="why-title">Xe chất lượng cao</h3>
+            <p class="why-desc">Đa dạng dòng xe từ phổ thông đến cao cấp</p>
+        </div>
+        <div class="why-card orange">
+            <div class="why-icon orange">💰</div>
+            <h3 class="why-title">Giá tốt nhất</h3>
+            <p class="why-desc">Cam kết giá cạnh tranh, nhiều ưu đãi hấp dẫn</p>
+        </div>
+    </div>
+</section>
+
+<!-- Vehicles Section -->
+<section class="vehicles-section" id="vehicles">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Xe hiện có</h2>
+            <p class="section-subtitle" th:text="${vehicles.size() + ' xe đang sẵn sàng cho bạn'}">Xe đang sẵn sàng</p>
+        </div>
+        <a th:href="@{/}" class="btn btn-outline" style="display:flex;align-items:center;gap:6px">
+            Xem tất cả
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
     </div>
 
     <!-- Vehicle Grid -->
-    <div class="grid grid-3 mb-3" th:if="${not #lists.isEmpty(vehicles)}">
-        <div class="card" th:each="vehicle : ${vehicles}">
-            <div style="height:180px;background:linear-gradient(135deg,#DBEAFE,#EDE9FE);display:flex;align-items:center;justify-content:center;font-size:4rem;">
-                🚗
-            </div>
-            <div class="card-body">
-                <span class="badge badge-success mb-1" th:text="${vehicle.type.typeName}">Loại xe</span>
-                <div class="card-title" th:text="${vehicle.brand + ' ' + vehicle.model}">Tên xe</div>
-                <div class="text-muted mb-1">
-                    📍 <span th:text="${vehicle.location != null ? vehicle.location.city : 'N/A'}">TP.HCM</span>
-                    &nbsp;|&nbsp; 🏷 <span th:text="${vehicle.licensePlate}">51A-123</span>
+    <div class="grid grid-3" style="gap:24px;padding-bottom:80px" th:if="${not #lists.isEmpty(vehicles)}">
+        <div class="vehicle-card" th:each="vehicle : ${vehicles}">
+            <a th:href="@{/vehicles/{id}(id=${vehicle.vehicleId})}" style="text-decoration:none;color:inherit">
+                <div class="vehicle-card-img">
+                    <!-- Dùng ảnh mockup theo loại xe -->
+                    <div class="vehicle-card-img-placeholder">🚗</div>
+                    <div class="vehicle-card-badges">
+                        <span class="badge badge-type" th:text="${vehicle.type.typeName}">Sedan</span>
+                        <span class="badge badge-success">Sẵn sàng</span>
+                    </div>
                 </div>
-                <div class="d-flex justify-between align-center mt-2">
-                    <div class="price-tag" th:text="${#numbers.formatDecimal(vehicle.dailyRate, 0, 'COMMA', 0, 'POINT') + ' ₫/ngày'}">500,000 ₫/ngày</div>
-                    <a th:href="@{/vehicles/{id}(id=${vehicle.vehicleId})}" class="btn btn-primary btn-sm">Đặt xe</a>
+                <div class="vehicle-card-body">
+                    <div class="vehicle-card-brand" th:text="${vehicle.brand}">Toyota</div>
+                    <div class="vehicle-card-name" th:text="${vehicle.brand + ' ' + vehicle.model}">Toyota Camry 2023</div>
+                    <div class="vehicle-card-specs">
+                        <div class="vehicle-card-spec">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                            <span th:text="${vehicle.yearMade != null ? vehicle.yearMade + '' : '5 chỗ'}">5 chỗ</span>
+                        </div>
+                        <div class="vehicle-card-spec">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                            <span>Automatic</span>
+                        </div>
+                        <div class="vehicle-card-spec">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            <span th:text="${vehicle.color != null ? vehicle.color : 'Xăng'}">Xăng</span>
+                        </div>
+                        <div class="vehicle-card-spec">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            <span th:text="${vehicle.location != null ? vehicle.location.city : 'N/A'}">TP.HCM</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+                <div class="vehicle-card-footer">
+                    <div>
+                        <div class="vehicle-card-price-label">Giá thuê/ngày</div>
+                        <div class="vehicle-card-price" th:text="${#numbers.formatDecimal(vehicle.dailyRate, 0, 'COMMA', 0, 'POINT') + ' ₫'}">800.000 ₫</div>
+                    </div>
+                    <span class="vehicle-card-link">Xem chi tiết →</span>
+                </div>
+            </a>
         </div>
     </div>
 
-    <div th:if="${#lists.isEmpty(vehicles)}" class="text-center p-3" style="color:var(--gray)">
-        <div style="font-size:3rem">🔍</div>
+    <div th:if="${#lists.isEmpty(vehicles)}" class="empty-state" style="padding-bottom:80px">
+        <div class="empty-state-icon">🔍</div>
         <p>Không có xe nào đang trống. Vui lòng thử loại khác.</p>
     </div>
-</div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <h2 class="cta-title">Sẵn sàng bắt đầu hành trình?</h2>
+    <p class="cta-subtitle">Đăng ký ngay để nhận ưu đãi đặc biệt cho lần thuê xe đầu tiên</p>
+    <a th:href="@{/register}" class="cta-btn">
+        Đăng ký ngay
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+    <div style="height:80px"></div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-top">
+        <!-- Left: columns -->
+        <div class="footer-cols">
+            <!-- Brand -->
+            <div class="footer-brand">
+                <img th:src="@{/images/logo.webp}" alt="XeNow">
+                <p>Nền tảng cho thuê xe hàng đầu Việt Nam. Đặt xe dễ dàng, lái xe an toàn, trải nghiệm đỉnh cao.</p>
+                <div class="footer-school">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <span>Đồ án môn học – Trường Đại học Công nghệ Kỹ thuật TP.HCM (HCMUTE)</span>
+                </div>
+                <div class="footer-socials">
+                    <a href="#" class="footer-social-btn" aria-label="Facebook">
+                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+                    </a>
+                    <a href="#" class="footer-social-btn" aria-label="Zalo">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    </a>
+                    <a href="#" class="footer-social-btn" aria-label="YouTube">
+                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon fill="#0F172B" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+                    </a>
+                    <a href="#" class="footer-social-btn" aria-label="TikTok">
+                        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Dịch vụ -->
+            <div class="footer-col">
+                <h4>Dịch vụ</h4>
+                <ul>
+                    <li><a th:href="@{/}">Thuê xe tự lái</a></li>
+                    <li><a th:href="@{/}">Thuê xe có tài xế</a></li>
+                    <li><a th:href="@{/}">Thuê xe theo tháng</a></li>
+                    <li><a th:href="@{/}">Xe đưa đón sân bay</a></li>
+                    <li><a th:href="@{/}">Xe du lịch</a></li>
+                </ul>
+            </div>
+
+            <!-- Liên hệ -->
+            <div class="footer-col">
+                <h4>Liên hệ</h4>
+                <div class="footer-contact-item">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                    <span>01 Võ Văn Ngân, Linh Chiểu,<br>Thủ Đức, TP.HCM</span>
+                </div>
+                <div class="footer-contact-item">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    <span>1800 6789 <span style="opacity:.6;font-size:12px">(Miễn phí)</span></span>
+                </div>
+                <div class="footer-contact-item">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span>support@xenow.vn</span>
+                </div>
+                <div class="footer-contact-item">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>T2 – CN: 7:00 – 22:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Google Map -->
+        <div class="footer-map-col">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4199.105974381275!2d106.76933817529977!3d10.850637657819968!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752763f23816ab%3A0x282f711441b6916f!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBDw7RuZyBuZ2jhu4cgS-G7uSB0aHXhuq10IFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaA!5e1!3m2!1svi!2sus!4v1774544175234!5m2!1svi!2sus"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="XeNow - 01 Võ Văn Ngân, Linh Chiểu, Thủ Đức, HCM">
+            </iframe>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="footer-bottom">
+        <div class="footer-bottom-inner">
+            <span>© 2026 XeNow - HCMUTE. Tất cả quyền được bảo lưu.</span>
+            <div style="display:flex;gap:20px">
+                <a href="#">Chính sách bảo mật</a>
+                <a href="#">Điều khoản sử dụng</a>
+                <a href="#">Cookies</a>
+            </div>
+        </div>
+    </div>
+</footer>
 
 </body>
 </html>

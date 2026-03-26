@@ -2,29 +2,38 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý xe - DrivEasy Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý xe - XeNow Admin</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <div class="admin-layout">
     <div class="sidebar">
-        <div class="sidebar-brand">🚗 DrivEasy Admin</div>
-        <a class="sidebar-link" th:href="@{/admin/dashboard}">📊 Dashboard</a>
-        <a class="sidebar-link" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
-        <a class="sidebar-link active" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
-        <a class="sidebar-link" th:href="@{/admin/customers}">👥 Khách hàng</a>
-        <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
+        <div class="sidebar-brand">
+            <img th:src="@{/images/logo.webp}" alt="XeNow">
+            Admin
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" th:href="@{/admin/dashboard}">📊 Dashboard</a>
+            <a class="sidebar-link" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
+            <a class="sidebar-link active" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
+            <a class="sidebar-link" th:href="@{/admin/customers}">👥 Khách hàng</a>
+            <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
+        </nav>
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-outline-white btn-sm w-full">Đăng xuất</button>
+            </form>
+        </div>
     </div>
 
     <div class="admin-content">
-        <div class="page-header d-flex justify-between align-center">
-            <div>
-                <div class="page-title">🚗 Quản lý xe</div>
-                <div class="page-subtitle">Theo dõi và cập nhật trạng thái hạm đội xe</div>
-            </div>
+        <div class="page-header">
+            <div class="page-title">Quản lý xe</div>
+            <div class="page-subtitle">Theo dõi và cập nhật trạng thái đội xe</div>
         </div>
 
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${success}" class="alert alert-success">✅ <span th:text="${success}"></span></div>
 
         <div class="card">
             <div class="card-body" style="padding:0">
@@ -54,18 +63,18 @@
                         <td th:text="${#numbers.formatDecimal(v.dailyRate, 0, 'COMMA', 0, 'POINT') + ' ₫'}"></td>
                         <td>
                             <span th:switch="${v.status.name()}">
-                                <span th:case="'Available'" class="badge badge-success">✅ Sẵn sàng</span>
-                                <span th:case="'Rented'" class="badge badge-purple">🚗 Đang thuê</span>
-                                <span th:case="'Maintenance'" class="badge badge-warning">🔧 Bảo trì</span>
-                                <span th:case="'OutOfService'" class="badge badge-danger">⛔ Ngừng HĐ</span>
+                                <span th:case="'Available'"   class="badge badge-success">Sẵn sàng</span>
+                                <span th:case="'Rented'"      class="badge badge-purple">Đang thuê</span>
+                                <span th:case="'Maintenance'" class="badge badge-warning">Bảo trì</span>
+                                <span th:case="'OutOfService'" class="badge badge-danger">Ngừng HĐ</span>
                             </span>
                         </td>
                         <td>
-                            <form th:action="@{/admin/vehicles/{id}/status(id=${v.vehicleId})}" method="post" class="d-flex" style="gap:0.3rem">
-                                <select name="status" class="form-control" style="width:auto;padding:0.3rem 0.6rem;font-size:0.8rem">
-                                    <option value="Available">✅ Sẵn sàng</option>
-                                    <option value="Maintenance">🔧 Bảo trì</option>
-                                    <option value="OutOfService">⛔ Ngừng HĐ</option>
+                            <form th:action="@{/admin/vehicles/{id}/status(id=${v.vehicleId})}" method="post" class="d-flex" style="gap:.3rem">
+                                <select name="status" class="form-control" style="width:auto;padding:.3rem .6rem;font-size:.8rem">
+                                    <option value="Available">Sẵn sàng</option>
+                                    <option value="Maintenance">Bảo trì</option>
+                                    <option value="OutOfService">Ngừng HĐ</option>
                                 </select>
                                 <button class="btn btn-primary btn-sm">Cập nhật</button>
                             </form>

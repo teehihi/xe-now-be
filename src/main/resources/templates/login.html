@@ -2,38 +2,70 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng nhập - DrivEasy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - XeNow</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<div class="auth-wrapper">
-    <div class="auth-card">
-        <div class="text-center mb-3">
-            <div style="font-size:3rem">🚗</div>
-            <h2>Đăng nhập DrivEasy</h2>
-            <p class="subtitle">Nhập email (khách hàng) hoặc username (quản lý)</p>
+<div class="auth-page">
+    <!-- Brand side -->
+    <div class="auth-brand">
+        <img class="auth-brand-logo" th:src="@{/images/logo.webp}" alt="XeNow" style="height:56px;object-fit:contain;filter:brightness(0) invert(1)">
+        <h1>Chào mừng trở lại</h1>
+        <p>Đăng nhập để tiếp tục trải nghiệm thuê xe nhanh chóng và tiện lợi cùng XeNow.</p>
+        <ul class="auth-brand-features">
+            <li>✅ Đặt xe chỉ trong vài giây</li>
+            <li>✅ Hơn 100+ xe đa dạng</li>
+            <li>✅ Giao xe tận nơi toàn quốc</li>
+            <li>✅ Hỗ trợ 24/7</li>
+        </ul>
+    </div>
+
+    <!-- Form side -->
+    <div class="auth-form-side">
+        <div class="auth-form-box">
+            <h2>Đăng nhập</h2>
+            <p class="auth-subtitle">Nhập email (khách hàng) hoặc username (quản lý)</p>
+
+            <div th:if="${error}" class="alert alert-danger">
+                ⚠ <span th:text="${error}">Thông tin đăng nhập không đúng.</span>
+            </div>
+            <div th:if="${message}" class="alert alert-success">
+                ✅ <span th:text="${message}"></span>
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="username">Email / Tên đăng nhập</label>
+                    <input id="username" type="text" name="username" class="form-control"
+                           placeholder="email@example.com" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <input id="password" type="password" name="password" class="form-control"
+                               placeholder="••••••••" required>
+                        <button type="button" class="input-icon-right" onclick="togglePassword('password', this)" aria-label="Hiện/ẩn mật khẩu">👁</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full" style="margin-top:.5rem">
+                    Đăng nhập
+                </button>
+            </form>
+
+            <p class="auth-footer">
+                Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a>
+            </p>
         </div>
-
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
-
-        <form th:action="@{/login}" method="post">
-            <div class="form-group">
-                <label class="form-label">Email / Tên đăng nhập</label>
-                <input type="text" name="username" class="form-control" placeholder="email@example.com" required autofocus>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.75rem">
-                🔐 Đăng nhập
-            </button>
-        </form>
-        <p class="text-center mt-2" style="font-size:0.9rem">
-            Chưa có tài khoản? <a th:href="@{/register}" style="color:var(--primary)">Đăng ký ngay</a>
-        </p>
     </div>
 </div>
+
+<script>
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁'; }
+}
+</script>
 </body>
 </html>

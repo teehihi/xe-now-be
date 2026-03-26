@@ -2,28 +2,39 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý đơn đặt xe - DrivEasy Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đơn đặt xe - XeNow Admin</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <div class="admin-layout">
     <div class="sidebar">
-        <div class="sidebar-brand">🚗 DrivEasy Admin</div>
-        <a class="sidebar-link" th:href="@{/admin/dashboard}">📊 Dashboard</a>
-        <a class="sidebar-link active" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
-        <a class="sidebar-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
-        <a class="sidebar-link" th:href="@{/admin/customers}">👥 Khách hàng</a>
-        <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
+        <div class="sidebar-brand">
+            <img th:src="@{/images/logo.webp}" alt="XeNow">
+            Admin
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" th:href="@{/admin/dashboard}">📊 Dashboard</a>
+            <a class="sidebar-link active" th:href="@{/admin/bookings}">📋 Đơn đặt xe</a>
+            <a class="sidebar-link" th:href="@{/admin/vehicles}">🚗 Quản lý xe</a>
+            <a class="sidebar-link" th:href="@{/admin/customers}">👥 Khách hàng</a>
+            <a class="sidebar-link" th:href="@{/}">🌐 Trang chủ</a>
+        </nav>
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-outline-white btn-sm w-full">Đăng xuất</button>
+            </form>
+        </div>
     </div>
 
     <div class="admin-content">
         <div class="page-header">
-            <div class="page-title">📋 Quản lý đơn đặt xe</div>
+            <div class="page-title">Quản lý đơn đặt xe</div>
             <div class="page-subtitle">Duyệt, xác nhận và theo dõi đơn thuê</div>
         </div>
 
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success">✅ <span th:text="${success}"></span></div>
+        <div th:if="${error}"   class="alert alert-danger">⚠ <span th:text="${error}"></span></div>
 
         <div class="card">
             <div class="card-body" style="padding:0">
@@ -57,34 +68,34 @@
                         <td th:text="${b.totalPrice != null ? #numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT') + ' ₫' : '--'}"></td>
                         <td>
                             <span th:switch="${b.status.name()}">
-                                <span th:case="'Pending'" class="badge badge-warning">⏳ Chờ duyệt</span>
-                                <span th:case="'Confirmed'" class="badge badge-info">✅ Xác nhận</span>
-                                <span th:case="'Ongoing'" class="badge badge-purple">🚗 Đang thuê</span>
-                                <span th:case="'Finished'" class="badge badge-success">✔ Xong</span>
-                                <span th:case="'Cancelled'" class="badge badge-danger">✖ Hủy</span>
+                                <span th:case="'Pending'"   class="badge badge-warning">Chờ duyệt</span>
+                                <span th:case="'Confirmed'" class="badge badge-info">Xác nhận</span>
+                                <span th:case="'Ongoing'"   class="badge badge-purple">Đang thuê</span>
+                                <span th:case="'Finished'"  class="badge badge-success">Xong</span>
+                                <span th:case="'Cancelled'" class="badge badge-danger">Hủy</span>
                             </span>
                         </td>
                         <td>
-                            <div class="d-flex" style="gap:0.4rem;flex-wrap:wrap">
+                            <div class="d-flex" style="gap:.4rem;flex-wrap:wrap">
                                 <form th:if="${b.status.name() == 'Pending'}"
                                       th:action="@{/admin/bookings/{id}/status(id=${b.bookingId})}" method="post">
                                     <input type="hidden" name="status" value="Confirmed">
-                                    <button class="btn btn-success btn-sm">✅ Duyệt</button>
+                                    <button class="btn btn-success btn-sm">Duyệt</button>
                                 </form>
                                 <form th:if="${b.status.name() == 'Confirmed'}"
                                       th:action="@{/admin/bookings/{id}/status(id=${b.bookingId})}" method="post">
                                     <input type="hidden" name="status" value="Ongoing">
-                                    <button class="btn btn-warning btn-sm">🚗 Bắt đầu</button>
+                                    <button class="btn btn-warning btn-sm">Bắt đầu</button>
                                 </form>
                                 <form th:if="${b.status.name() == 'Ongoing'}"
                                       th:action="@{/admin/bookings/{id}/status(id=${b.bookingId})}" method="post">
                                     <input type="hidden" name="status" value="Finished">
-                                    <button class="btn btn-primary btn-sm">✔ Hoàn thành</button>
+                                    <button class="btn btn-primary btn-sm">Hoàn thành</button>
                                 </form>
                                 <form th:if="${b.status.name() == 'Pending' or b.status.name() == 'Confirmed'}"
                                       th:action="@{/admin/bookings/{id}/status(id=${b.bookingId})}" method="post">
                                     <input type="hidden" name="status" value="Cancelled">
-                                    <button class="btn btn-danger btn-sm">✖ Hủy</button>
+                                    <button class="btn btn-danger btn-sm">Hủy</button>
                                 </form>
                             </div>
                         </td>

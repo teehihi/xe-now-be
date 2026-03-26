@@ -8,6 +8,9 @@ target/
 .project
 .settings/
 .classpath
+.factorypath
+# IDE workspace settings
+.kiro/
 bin/
 *.rar
 *.zip
