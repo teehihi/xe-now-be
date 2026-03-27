@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "payments")
+@Table(name = "Payment")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,35 +14,38 @@ import java.time.LocalDateTime;
 public class Payment {
 
     public enum Method {
-        Cash, BankTransfer, CreditCard, MoMo, ZaloPay
+        Cash, CreditCard, BankTransfer, EWallet
     }
 
     public enum Status {
-        Pending, Completed, Refunded
+        Pending, Completed, Failed, Refunded
     }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "PaymentID")
     private Integer paymentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false)
+    @JoinColumn(name = "BookingID")
     private Booking booking;
 
-    @Column(nullable = false)
+    @Column(name = "Amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    private Method method;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Status status = Status.Pending;
-
+    @Column(name = "PaymentDate")
     private LocalDateTime paymentDate;
 
-    @Column(columnDefinition = "TEXT")
-    private String notes;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "PaymentMethod")
+    private Method paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Status")
+    private Status status = Status.Pending;
+
+    @Column(name = "TransactionCode", length = 100)
+    private String transactionCode;
 
     @PrePersist
     protected void onCreate() {

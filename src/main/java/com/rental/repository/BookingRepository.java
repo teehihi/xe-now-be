@@ -7,8 +7,8 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
-    List<Booking> findByCustomerCustomerId(Integer customerId);
+    List<Booking> findByCustomerUserId(Integer userId);
     List<Booking> findByStatus(Booking.Status status);
     List<Booking> findByVehicleVehicleId(Integer vehicleId);
-    List<Booking> findAllByOrderByCreatedAtDesc();
+    List<Booking> findAllByOrderByStartDateDesc();
 }

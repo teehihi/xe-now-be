@@ -3,11 +3,10 @@ package com.rental.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "bookings")
+@Table(name = "Booking")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,53 +14,55 @@ import java.time.LocalDateTime;
 public class Booking {
 
     public enum Status {
-        Pending, Confirmed, Cancelled, Ongoing, Finished
+        Pending, Confirmed, PickedUp, Ongoing, Returned, Cancelled
     }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "BookingID")
     private Integer bookingId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "CustomerID", nullable = false)
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    @JoinColumn(name = "VehicleID", nullable = false)
     private Vehicle vehicle;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private Manager manager;
-
-    @Column(nullable = false)
-    private LocalDate startDate;
-
-    @Column(nullable = false)
-    private LocalDate endDate;
+    @JoinColumn(name = "ApprovedBy")
+    private User approvedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pickup_location_id")
+    @JoinColumn(name = "PickupLocationID")
     private Location pickupLocation;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "return_location_id")
+    @JoinColumn(name = "ReturnLocationID")
     private Location returnLocation;
 
+    @Column(name = "StartDate", nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(name = "EndDate", nullable = false)
+    private LocalDateTime endDate;
+
+    @Column(name = "TotalPrice", precision = 15, scale = 2)
     private BigDecimal totalPrice;
+
+    @Column(name = "DepositAmount", precision = 15, scale = 2)
     private BigDecimal depositAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "Status")
+    @Builder.Default
     private Status status = Status.Pending;
 
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CouponID")
+    private Coupon coupon;
 
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    @Column(name = "DeletedAt")
+    private LocalDateTime deletedAt;
 }

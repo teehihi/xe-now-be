@@ -10,7 +10,8 @@ import java.util.List;
 public interface VehicleRepository extends JpaRepository<Vehicle, Integer> {
     List<Vehicle> findByStatus(Vehicle.Status status);
     List<Vehicle> findByTypeTypeId(Integer typeId);
-    List<Vehicle> findByLocationLocationId(Integer locationId);
+    // Fix: Vehicle field is now currentLocation, not location
+    List<Vehicle> findByCurrentLocationLocationId(Integer locationId);
 
     @Query("SELECT v FROM Vehicle v WHERE v.status = 'Available' AND (:typeId IS NULL OR v.type.typeId = :typeId)")
     List<Vehicle> findAvailableByType(Integer typeId);

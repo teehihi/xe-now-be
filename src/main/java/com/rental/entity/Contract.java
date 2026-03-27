@@ -2,11 +2,10 @@ package com.rental.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "contracts")
+@Table(name = "Contract")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,24 +13,16 @@ import java.time.LocalDate;
 public class Contract {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ContractID")
     private Integer contractId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false)
+    @JoinColumn(name = "BookingID", unique = true)
     private Booking booking;
 
-    private LocalDate signDate;
-    private BigDecimal penaltyFee;
-    private BigDecimal damageFee;
-    private BigDecimal cleaningFee;
-    private BigDecimal totalFinalPrice;
+    @Column(name = "SignedDate")
+    private LocalDateTime signedDate;
 
-    @Column(columnDefinition = "TEXT")
-    private String conditionBefore;
-
-    @Column(columnDefinition = "TEXT")
-    private String conditionAfter;
-
-    @Column(columnDefinition = "TEXT")
-    private String notes;
+    @Column(name = "Terms", columnDefinition = "TEXT")
+    private String terms;
 }

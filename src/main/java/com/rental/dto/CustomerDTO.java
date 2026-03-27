@@ -4,9 +4,12 @@ import lombok.Data;
 
 @Data
 public class CustomerDTO {
-    private Integer customerId;
-    private String name;
+    private Integer userId;
+    private Integer customerId; // Added for compatibility
+    private String fullName;
+    private String name; // Added for compatibility
     private String email;
     private String phone;
-    private String address;
+    private String identityCard;
+    private String driverLicense;
 }

@@ -3,16 +3,17 @@ package com.rental.dto;
 import com.rental.entity.Booking;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class BookingDTO {
     private Integer bookingId;
     private Integer vehicleId;
-    private String vehicleModel;
+    private String vehicleName;
+    private String vehicleModel; // Added for compatibility
     private String customerName;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
     private String pickupLocationName;
     private String returnLocationName;
     private BigDecimal totalPrice;

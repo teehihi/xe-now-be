@@ -3,11 +3,10 @@ package com.rental.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "rental_history")
+@Table(name = "RentalHistory")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,27 +14,39 @@ import java.time.LocalDateTime;
 public class RentalHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "HistoryID")
     private Integer historyId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false)
+    @JoinColumn(name = "BookingID", unique = true)
     private Booking booking;
 
-    private LocalDate actualStartDate;
-    private LocalDate actualEndDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CustomerID")
+    private Customer customer;
 
-    private BigDecimal penaltyFee;
-    private BigDecimal damageFee;
-    private BigDecimal cleaningFee;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "VehicleID")
+    private Vehicle vehicle;
+
+    @Column(name = "ActualStartDate")
+    private LocalDateTime actualStartDate;
+
+    @Column(name = "ActualEndDate")
+    private LocalDateTime actualEndDate;
+
+    @Column(name = "PricePerDayAtBooking", precision = 15, scale = 2)
+    private BigDecimal pricePerDayAtBooking;
+
+    @Column(name = "TotalPriceAtBooking", precision = 15, scale = 2)
+    private BigDecimal totalPriceAtBooking;
+
+    @Column(name = "PenaltyFee", precision = 15, scale = 2)
+    private BigDecimal penaltyFee = BigDecimal.ZERO;
+
+    @Column(name = "DamageFee", precision = 15, scale = 2)
+    private BigDecimal damageFee = BigDecimal.ZERO;
+
+    @Column(name = "TotalFinalPrice", precision = 15, scale = 2)
     private BigDecimal totalFinalPrice;
-
-    @Column(columnDefinition = "TEXT")
-    private String notes;
-
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

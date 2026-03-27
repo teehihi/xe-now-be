@@ -5,35 +5,44 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "customers")
+@Table(name = "Customer")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Customer {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer customerId;
+    @Column(name = "UserID")
+    private Integer userId;
+    
+    // Getter methods for User properties
+    public Integer getCustomerId() {
+        return userId;
+    }
+    
+    public String getName() {
+        return user != null ? user.getFullName() : null;
+    }
+    
+    public String getEmail() {
+        return user != null ? user.getEmail() : null;
+    }
+    
+    public String getPhone() {
+        return user != null ? user.getPhone() : null;
+    }
 
-    @Column(nullable = false)
-    private String name;
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "UserID")
+    private User user;
 
-    @Column(unique = true, nullable = false)
-    private String email;
+    @Column(name = "IdentityCard", nullable = false, unique = true, length = 20)
+    private String identityCard;
 
-    @Column(nullable = false)
-    private String passwordHash;
-
-    private String phone;
-    private String address;
-
-    @Column(unique = true)
-    private String nationalId; // CCCD
-
-    @Column(unique = true)
+    @Column(name = "DriverLicense", nullable = false, unique = true, length = 20)
     private String driverLicense;
 
-    private LocalDate licenseExpiry;
-
-    private Boolean active = true;
+    @Column(name = "DriverLicenseExpiry")
+    private LocalDate driverLicenseExpiry;
 }

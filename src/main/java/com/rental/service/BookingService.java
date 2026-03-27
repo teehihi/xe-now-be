@@ -19,11 +19,11 @@ public class BookingService {
     private final VehicleRepository vehicleRepository;
 
     public List<Booking> getAllBookings() {
-        return bookingRepository.findAllByOrderByCreatedAtDesc();
+        return bookingRepository.findAllByOrderByStartDateDesc();
     }
 
-    public List<Booking> getBookingsByCustomer(Integer customerId) {
-        return bookingRepository.findByCustomerCustomerId(customerId);
+    public List<Booking> getBookingsByCustomer(Integer userId) {
+        return bookingRepository.findByCustomerUserId(userId);
     }
 
     public List<Booking> getBookingsByStatus(Booking.Status status) {
@@ -37,16 +37,12 @@ public class BookingService {
 
     @Transactional
     public Booking createBooking(Booking booking) {
-        // Calculate total price
         long days = ChronoUnit.DAYS.between(booking.getStartDate(), booking.getEndDate());
         if (days <= 0) throw new IllegalArgumentException("Ngày trả phải sau ngày nhận xe");
 
-        BigDecimal dailyRate = booking.getVehicle().getDailyRate();
-        booking.setTotalPrice(dailyRate.multiply(BigDecimal.valueOf(days)));
+        BigDecimal pricePerDay = booking.getVehicle().getPricePerDay();
+        booking.setTotalPrice(pricePerDay.multiply(BigDecimal.valueOf(days)));
         booking.setStatus(Booking.Status.Pending);
-
-        // Mark vehicle as unavailable
-        Vehicle vehicle = booking.getVehicle();
         return bookingRepository.save(booking);
     }
 
@@ -55,12 +51,11 @@ public class BookingService {
         Booking booking = getById(bookingId);
         booking.setStatus(newStatus);
 
-        // Sync vehicle status
         Vehicle vehicle = booking.getVehicle();
-        if (newStatus == Booking.Status.Ongoing) {
+        if (newStatus == Booking.Status.PickedUp) {
             vehicle.setStatus(Vehicle.Status.Rented);
             vehicleRepository.save(vehicle);
-        } else if (newStatus == Booking.Status.Finished || newStatus == Booking.Status.Cancelled) {
+        } else if (newStatus == Booking.Status.Returned || newStatus == Booking.Status.Cancelled) {
             vehicle.setStatus(Vehicle.Status.Available);
             vehicleRepository.save(vehicle);
         }

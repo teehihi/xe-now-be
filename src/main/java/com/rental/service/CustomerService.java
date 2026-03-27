@@ -1,9 +1,10 @@
 package com.rental.service;
 
 import com.rental.entity.Customer;
+import com.rental.entity.User;
 import com.rental.repository.CustomerRepository;
+import com.rental.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -12,15 +13,7 @@ import java.util.List;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    public Customer register(Customer customer) {
-        if (customerRepository.existsByEmail(customer.getEmail())) {
-            throw new RuntimeException("Email đã được sử dụng");
-        }
-        customer.setPasswordHash(passwordEncoder.encode(customer.getPasswordHash()));
-        return customerRepository.save(customer);
-    }
+    private final UserRepository userRepository;
 
     public List<Customer> getAll() {
         return customerRepository.findAll();
@@ -31,8 +24,24 @@ public class CustomerService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
     }
 
+    public Customer findByUserId(Integer userId) {
+        return customerRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + userId));
+    }
+    
     public Customer findByEmail(String email) {
-        return customerRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với email: " + email));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email: " + email));
+        return customerRepository.findById(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+    }
+    
+    public Customer register(Customer customer) {
+        // Save user first
+        User user = customer.getUser();
+        user = userRepository.save(user);
+        customer.setUser(user);
+        customer.setUserId(user.getUserId());
+        return customerRepository.save(customer);
     }
 }
