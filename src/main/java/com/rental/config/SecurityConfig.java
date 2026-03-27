@@ -55,45 +55,44 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity in REST API
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/api/auth/**", "/api/vehicles/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("MANAGER")
-                .requestMatchers("/api/bookings/**").hasAnyRole("CUSTOMER", "MANAGER")
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/api/auth/login")
-                .successHandler((request, response, authentication) -> {
-                    response.setStatus(200);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"Đăng nhập thành công\",\"authenticated\":true}");
-                })
-                .failureHandler((request, response, exception) -> {
-                    response.setStatus(401);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"Sai tài khoản hoặc mật khẩu\",\"authenticated\":false}");
-                })
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    response.setStatus(200);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"Đăng xuất thành công\"}");
-                })
-                .permitAll()
-            )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(401);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"Bạn cần đăng nhập để thực hiện hành động này\"}");
-                })
-            );
+                .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity in REST API
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**", "/images/**")
+                        .permitAll()
+                        .requestMatchers("/api/auth/**", "/api/vehicles/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("MANAGER")
+                        .requestMatchers("/api/bookings/**").hasAnyRole("CUSTOMER", "MANAGER")
+                        .anyRequest().authenticated())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/api/auth/login")
+                        .successHandler((request, response, authentication) -> {
+                            response.setStatus(200);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"message\":\"Đăng nhập thành công\",\"authenticated\":true}");
+                        })
+                        .failureHandler((request, response, exception) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter()
+                                    .write("{\"message\":\"Sai tài khoản hoặc mật khẩu\",\"authenticated\":false}");
+                        })
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(200);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"message\":\"Đăng xuất thành công\"}");
+                        })
+                        .permitAll())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter()
+                                    .write("{\"message\":\"Bạn cần đăng nhập để thực hiện hành động này\"}");
+                        }));
         return http.build();
     }
 }
