@@ -2,19 +2,21 @@ package com.rental.controller;
 
 import com.rental.entity.Booking;
 import com.rental.entity.Customer;
+import com.rental.dto.BookingDTO;
 import com.rental.service.BookingService;
 import com.rental.service.CustomerService;
 import com.rental.service.VehicleService;
 import com.rental.repository.LocationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller
-@RequestMapping("/bookings")
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/bookings")
 @RequiredArgsConstructor
 public class BookingController {
 
@@ -23,40 +25,50 @@ public class BookingController {
     private final CustomerService customerService;
     private final LocationRepository locationRepository;
 
-    @GetMapping("/create/{vehicleId}")
-    public String showBookingForm(@PathVariable Integer vehicleId, Model model) {
-        model.addAttribute("vehicle", vehicleService.getById(vehicleId));
-        model.addAttribute("locations", locationRepository.findAll());
-        model.addAttribute("booking", new Booking());
-        return "booking-form";
+    @GetMapping("/my-bookings")
+    public List<BookingDTO> myBookings(Authentication authentication) {
+        Customer customer = customerService.findByEmail(authentication.getName());
+        return bookingService.getBookingsByCustomer(customer.getCustomerId()).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/create/{vehicleId}")
-    public String createBooking(
+    public ResponseEntity<?> createBooking(
             @PathVariable Integer vehicleId,
-            @ModelAttribute Booking booking,
+            @RequestBody Booking booking,
             @RequestParam Integer pickupLocationId,
             @RequestParam Integer returnLocationId,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes) {
+            Authentication authentication) {
         try {
             Customer customer = customerService.findByEmail(authentication.getName());
             booking.setCustomer(customer);
             booking.setVehicle(vehicleService.getById(vehicleId));
             booking.setPickupLocation(locationRepository.findById(pickupLocationId).orElse(null));
             booking.setReturnLocation(locationRepository.findById(returnLocationId).orElse(null));
-            bookingService.createBooking(booking);
-            redirectAttributes.addFlashAttribute("success", "Đặt xe thành công! Chờ xác nhận.");
+            Booking saved = bookingService.createBooking(booking);
+            return ResponseEntity.ok(convertToDTO(saved));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return "redirect:/my-bookings";
     }
 
-    @GetMapping("/my-bookings")
-    public String myBookings(Authentication authentication, Model model) {
-        Customer customer = customerService.findByEmail(authentication.getName());
-        model.addAttribute("bookings", bookingService.getBookingsByCustomer(customer.getCustomerId()));
-        return "my-bookings";
+    private BookingDTO convertToDTO(Booking booking) {
+        BookingDTO dto = new BookingDTO();
+        dto.setBookingId(booking.getBookingId());
+        dto.setVehicleId(booking.getVehicle().getVehicleId());
+        dto.setVehicleModel(booking.getVehicle().getModel());
+        dto.setCustomerName(booking.getCustomer().getName());
+        dto.setStartDate(booking.getStartDate());
+        dto.setEndDate(booking.getEndDate());
+        if (booking.getPickupLocation() != null) {
+            dto.setPickupLocationName(booking.getPickupLocation().getAddress());
+        }
+        if (booking.getReturnLocation() != null) {
+            dto.setReturnLocationName(booking.getReturnLocation().getAddress());
+        }
+        dto.setTotalPrice(booking.getTotalPrice());
+        dto.setStatus(booking.getStatus());
+        return dto;
     }
 }

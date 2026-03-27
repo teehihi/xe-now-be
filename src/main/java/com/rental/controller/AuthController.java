@@ -1,43 +1,40 @@
 package com.rental.controller;
 
+import com.rental.dto.AuthResponseDTO;
 import com.rental.entity.Customer;
 import com.rental.service.CustomerService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller
+@RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final CustomerService customerService;
 
-    @GetMapping("/login")
-    public String loginPage(@RequestParam(required = false) String error,
-                            @RequestParam(required = false) String logout,
-                            Model model) {
-        if (error != null) model.addAttribute("error", "Sai tài khoản hoặc mật khẩu!");
-        if (logout != null) model.addAttribute("message", "Đăng xuất thành công.");
-        return "login";
-    }
-
-    @GetMapping("/register")
-    public String registerPage(Model model) {
-        model.addAttribute("customer", new Customer());
-        return "register";
-    }
-
     @PostMapping("/register")
-    public String register(@ModelAttribute Customer customer, RedirectAttributes redirectAttributes) {
+    public ResponseEntity<?> register(@RequestBody Customer customer) {
         try {
             customerService.register(customer);
-            redirectAttributes.addFlashAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
+            return ResponseEntity.ok("Đăng ký thành công!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/register";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return "redirect:/login";
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Chưa đăng nhập");
+        }
+        return ResponseEntity.ok(new AuthResponseDTO(
+            "Đã đăng nhập",
+            authentication.getName(),
+            authentication.getAuthorities().toString(),
+            true
+        ));
     }
 }

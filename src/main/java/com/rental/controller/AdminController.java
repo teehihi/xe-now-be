@@ -3,17 +3,19 @@ package com.rental.controller;
 import com.rental.entity.Booking;
 import com.rental.entity.Customer;
 import com.rental.entity.Vehicle;
+import com.rental.dto.*;
 import com.rental.service.BookingService;
 import com.rental.service.CustomerService;
 import com.rental.service.VehicleService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller
-@RequestMapping("/admin")
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -22,61 +24,96 @@ public class AdminController {
     private final CustomerService customerService;
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
+    public DashboardStatsDTO dashboard() {
         long totalVehicles = vehicleService.getAllVehicles().size();
         long availableVehicles = vehicleService.getAvailableVehicles().size();
         long pendingBookings = bookingService.getBookingsByStatus(Booking.Status.Pending).size();
         long ongoingBookings = bookingService.getBookingsByStatus(Booking.Status.Ongoing).size();
 
-        model.addAttribute("totalVehicles", totalVehicles);
-        model.addAttribute("availableVehicles", availableVehicles);
-        model.addAttribute("pendingBookings", pendingBookings);
-        model.addAttribute("ongoingBookings", ongoingBookings);
-        model.addAttribute("recentBookings", bookingService.getAllBookings());
-        return "admin/dashboard";
+        return DashboardStatsDTO.builder()
+                .totalVehicles(totalVehicles)
+                .availableVehicles(availableVehicles)
+                .pendingBookings(pendingBookings)
+                .ongoingBookings(ongoingBookings)
+                .recentBookings(bookingService.getAllBookings().stream()
+                        .map(this::convertToBookingDTO)
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     @GetMapping("/bookings")
-    public String allBookings(Model model) {
-        model.addAttribute("bookings", bookingService.getAllBookings());
-        return "admin/bookings";
+    public List<BookingDTO> allBookings() {
+        return bookingService.getAllBookings().stream()
+                .map(this::convertToBookingDTO)
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/bookings/{id}/status")
-    public String updateBookingStatus(@PathVariable Integer id,
-                                       @RequestParam String status,
-                                       RedirectAttributes redirectAttributes) {
+    public ResponseEntity<?> updateBookingStatus(@PathVariable Integer id,
+                                               @RequestParam String status) {
         try {
             bookingService.updateStatus(id, Booking.Status.valueOf(status));
-            redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái thành công!");
+            return ResponseEntity.ok("Cập nhật trạng thái thành công!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return "redirect:/admin/bookings";
     }
 
     @GetMapping("/vehicles")
-    public String allVehicles(Model model) {
-        model.addAttribute("vehicles", vehicleService.getAllVehicles());
-        return "admin/vehicles";
+    public List<VehicleDTO> allVehicles() {
+        return vehicleService.getAllVehicles().stream()
+                .map(this::convertToVehicleDTO)
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/vehicles/{id}/status")
-    public String updateVehicleStatus(@PathVariable Integer id,
-                                       @RequestParam String status,
-                                       RedirectAttributes redirectAttributes) {
+    public ResponseEntity<?> updateVehicleStatus(@PathVariable Integer id,
+                                               @RequestParam String status) {
         try {
             vehicleService.updateStatus(id, Vehicle.Status.valueOf(status));
-            redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái xe thành công!");
+            return ResponseEntity.ok("Cập nhật trạng thái xe thành công!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return "redirect:/admin/vehicles";
     }
 
     @GetMapping("/customers")
-    public String allCustomers(Model model) {
-        model.addAttribute("customers", customerService.getAll());
-        return "admin/customers";
+    public List<CustomerDTO> allCustomers() {
+        return customerService.getAll().stream()
+                .map(this::convertToCustomerDTO)
+                .collect(Collectors.toList());
+    }
+
+    private BookingDTO convertToBookingDTO(Booking booking) {
+        BookingDTO dto = new BookingDTO();
+        dto.setBookingId(booking.getBookingId());
+        dto.setVehicleId(booking.getVehicle().getVehicleId());
+        dto.setVehicleModel(booking.getVehicle().getModel());
+        dto.setCustomerName(booking.getCustomer().getName());
+        dto.setStartDate(booking.getStartDate());
+        dto.setEndDate(booking.getEndDate());
+        dto.setTotalPrice(booking.getTotalPrice());
+        dto.setStatus(booking.getStatus());
+        return dto;
+    }
+
+    private VehicleDTO convertToVehicleDTO(Vehicle vehicle) {
+        VehicleDTO dto = new VehicleDTO();
+        dto.setVehicleId(vehicle.getVehicleId());
+        dto.setLicensePlate(vehicle.getLicensePlate());
+        dto.setBrand(vehicle.getBrand());
+        dto.setModel(vehicle.getModel());
+        dto.setDailyRate(vehicle.getDailyRate());
+        dto.setStatus(vehicle.getStatus());
+        return dto;
+    }
+
+    private CustomerDTO convertToCustomerDTO(Customer customer) {
+        CustomerDTO dto = new CustomerDTO();
+        dto.setCustomerId(customer.getCustomerId());
+        dto.setName(customer.getName());
+        dto.setEmail(customer.getEmail());
+        dto.setPhone(customer.getPhone());
+        return dto;
     }
 }
