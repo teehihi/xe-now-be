@@ -33,6 +33,7 @@ public class BookingController {
                 .collect(Collectors.toList());
     }
 
+    @SuppressWarnings("null")
     @PostMapping("/create/{vehicleId}")
     public ResponseEntity<?> createBooking(
             @PathVariable Integer vehicleId,

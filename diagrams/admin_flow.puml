@@ -1,0 +1,18 @@
+@startuml Admin_Acceptance_Flow
+actor Manager
+participant "Admin UI" as UI
+participant "AdminController" as Control
+participant "BookingService" as Service
+database "MySQL" as DB
+
+Manager -> UI: Select "Confirm" on Booking #123
+UI -> Control: PUT /api/admin/bookings/123/confirm
+Control -> Service: confirmBooking(123)
+Service -> DB: UPDATE bookings SET status='CONFIRMED' WHERE id=123
+DB --> Service: OK
+Service -> DB: UPDATE vehicles SET status='BOOKED' WHERE id=vehicleId
+DB --> Service: OK
+Service --> Control: Success
+Control --> UI: 200 OK
+UI -> Manager: Update Dashboard view
+@enduml

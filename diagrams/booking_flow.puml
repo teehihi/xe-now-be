@@ -1,0 +1,19 @@
+@startuml Booking_Flow
+actor Customer
+participant "Booking Form" as UI
+participant "BookingController" as API
+participant "BookingService" as Service
+participant "VehicleRepository" as VRepo
+database "MySQL" as DB
+
+Customer -> UI: Select Vehicle #5, Dates: 01/04 - 05/04
+UI -> API: POST /api/bookings/create
+API -> Service: processNewBooking(data)
+Service -> VRepo: checkAvailability(5, 01/04, 05/04)
+VRepo --> Service: Available
+Service -> DB: INSERT INTO bookings (vehicle_id=5, status='PENDING', total=500$)
+DB --> Service: ID: 1001
+Service --> API: BookingDTO(ID 1001)
+API --> UI: Success Response
+UI -> Customer: "Booking #1001 is awaiting confirmation"
+@enduml
