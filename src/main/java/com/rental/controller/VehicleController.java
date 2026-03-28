@@ -33,17 +33,63 @@ public class VehicleController {
 
     private VehicleDTO convertToDTO(Vehicle vehicle) {
         VehicleDTO dto = new VehicleDTO();
+        
+        // IDs
+        dto.setId(vehicle.getVehicleId());
         dto.setVehicleId(vehicle.getVehicleId());
+        
+        // Basic info
         dto.setLicensePlate(vehicle.getLicensePlate());
-        dto.setBrand(vehicle.getBrand());
+        dto.setName(vehicle.getName());
         dto.setModel(vehicle.getModel());
-        dto.setYearMade(vehicle.getYearMade());
-        dto.setColor(vehicle.getColor());
-        dto.setDailyRate(vehicle.getDailyRate());
+        dto.setBrand(vehicle.getBrand());
+        
+        // Year
+        dto.setYear(vehicle.getManufactureYear());
+        dto.setManufactureYear(vehicle.getManufactureYear());
+        dto.setYearMade(vehicle.getManufactureYear());
+        
+        // Pricing and status
+        dto.setPricePerDay(vehicle.getPricePerDay());
+        dto.setDailyRate(vehicle.getPricePerDay());
         dto.setStatus(vehicle.getStatus());
+        dto.setMileage(vehicle.getMileage());
+        dto.setAverageRating(vehicle.getAverageRating());
+        
+        // Type
         if (vehicle.getType() != null) {
-            dto.setTypeName(vehicle.getType().getTypeName());
+            String typeName = vehicle.getType().getTypeName();
+            dto.setType(typeName);
+            dto.setTypeName(typeName);
+            
+            // Determine category based on type (case-insensitive and trim whitespace)
+            String typeNameLower = typeName.toLowerCase().trim();
+            if (typeNameLower.contains("tay ga") || typeNameLower.contains("số") || 
+                typeNameLower.equals("xe tay ga") || typeNameLower.equals("xe số")) {
+                dto.setCategory("motorcycle");
+            } else {
+                dto.setCategory("car");
+            }
+        } else {
+            // Default to car if no type
+            dto.setCategory("car");
         }
+        
+        // Vehicle specs from database
+        dto.setSeats(vehicle.getSeats());
+        dto.setFuel(vehicle.getFuelType());
+        dto.setTransmission(vehicle.getTransmission());
+        
+        // Location
+        if (vehicle.getCurrentLocation() != null) {
+            String locationName = vehicle.getCurrentLocation().getBranchName();
+            dto.setLocation(locationName);
+            dto.setLocationName(locationName);
+        }
+        
+        // Image - placeholder for now
+        dto.setImage("/images/car-toyota-camry.webp");
+        
         return dto;
     }
 }

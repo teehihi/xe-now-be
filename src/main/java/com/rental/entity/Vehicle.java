@@ -22,11 +22,11 @@ public class Vehicle {
     @Column(name = "VehicleID")
     private Integer vehicleId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "TypeID")
     private VehicleType type;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "CurrentLocationID")
     private Location currentLocation;
 
@@ -39,12 +39,15 @@ public class Vehicle {
     @Column(name = "Brand", length = 50)
     private String brand;
 
+    @Column(name = "Model", length = 50)
+    private String model;
+
     @Column(name = "ManufactureYear")
     private Integer manufactureYear;
     
     // Getter methods for compatibility
     public String getModel() {
-        return name;
+        return model;
     }
     
     public Integer getYearMade() {
@@ -62,6 +65,15 @@ public class Vehicle {
     @Column(name = "Mileage")
     @Builder.Default
     private Integer mileage = 0;
+
+    @Column(name = "Seats")
+    private Integer seats;
+
+    @Column(name = "FuelType", length = 50)
+    private String fuelType;
+
+    @Column(name = "Transmission", length = 50)
+    private String transmission;
 
     @Column(name = "PricePerDay", nullable = false, precision = 15, scale = 2)
     private BigDecimal pricePerDay;
