@@ -67,21 +67,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/bookings/**").hasAnyRole("CUSTOMER", "ADMIN", "STAFF")
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/api/auth/login")
-                .successHandler((request, response, authentication) -> {
-                    response.setStatus(200);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"Đăng nhập thành công\",\"authenticated\":true}");
-                })
-                .failureHandler((request, response, exception) -> {
-                    response.setStatus(401);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"Sai tài khoản hoặc mật khẩu\",\"authenticated\":false}");
-                })
-                .permitAll()
-            )
             .logout(logout -> logout
                 .logoutUrl("/api/auth/logout")
                 .logoutSuccessHandler((request, response, authentication) -> {
