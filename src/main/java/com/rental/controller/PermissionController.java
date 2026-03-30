@@ -1,14 +1,15 @@
 package com.rental.controller;
 
+import com.rental.dto.ApiResponse;
 import com.rental.entity.Permission;
 import com.rental.service.PermissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/permissions")
@@ -19,44 +20,51 @@ public class PermissionController {
     private final PermissionService permissionService;
 
     @GetMapping
-    public ResponseEntity<List<Permission>> getAllPermissions() {
-        return ResponseEntity.ok(permissionService.findAll());
+    public ResponseEntity<ApiResponse<List<Permission>>> getAllPermissions() {
+        return ResponseEntity.ok(ApiResponse.success(permissionService.findAll(), "Lấy danh sách quyền thành công"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPermissionById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Permission>> getPermissionById(@PathVariable Integer id) {
         try {
-            return ResponseEntity.ok(permissionService.findById(id));
+            return ResponseEntity.ok(ApiResponse.success(permissionService.findById(id), "Lấy thông tin quyền thành công"));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Không tìm thấy quyền với ID: " + id));
         }
     }
 
     @PostMapping
-    public ResponseEntity<?> createPermission(@RequestBody Permission permission) {
+    public ResponseEntity<ApiResponse<Permission>> createPermission(@RequestBody Permission permission) {
         try {
-            return ResponseEntity.ok(permissionService.create(permission));
+            Permission created = permissionService.create(permission);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.created(created, "Tạo quyền mới thành công"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePermission(@PathVariable Integer id, @RequestBody Permission permissionDetails) {
+    public ResponseEntity<ApiResponse<Permission>> updatePermission(@PathVariable Integer id, @RequestBody Permission permissionDetails) {
         try {
-            return ResponseEntity.ok(permissionService.update(id, permissionDetails));
+            Permission updated = permissionService.update(id, permissionDetails);
+            return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật quyền thành công"));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Không tìm thấy quyền với ID: " + id));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePermission(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Object>> deletePermission(@PathVariable Integer id) {
         try {
             permissionService.delete(id);
-            return ResponseEntity.ok(Map.of("message", "Xóa quyền thành công"));
+            return ResponseEntity.ok(ApiResponse.success(null, "Xóa quyền thành công"));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Không tìm thấy quyền với ID: " + id));
         }
     }
 }

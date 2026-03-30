@@ -1,19 +1,24 @@
 package com.rental.controller;
 
+import com.rental.dto.ApiResponse;
+import com.rental.dto.BookingDTO;
 import com.rental.entity.Booking;
 import com.rental.entity.Customer;
-import com.rental.dto.BookingDTO;
+import com.rental.repository.LocationRepository;
 import com.rental.service.BookingService;
 import com.rental.service.CustomerService;
 import com.rental.service.VehicleService;
-import com.rental.repository.LocationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -26,16 +31,19 @@ public class BookingController {
     private final LocationRepository locationRepository;
 
     @GetMapping("/my-bookings")
-    public List<BookingDTO> myBookings(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Page<BookingDTO>>> myBookings(
+            @PageableDefault(size = 5) Pageable pageable,
+            Authentication authentication) {
         Customer customer = customerService.findByEmail(authentication.getName());
-        return bookingService.getBookingsByCustomer(customer.getCustomerId()).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        Page<BookingDTO> bookings = bookingService.getBookingsByCustomer(customer.getCustomerId(), pageable)
+                .map(this::convertToDTO);
+        return ResponseEntity.ok(ApiResponse.success(bookings, "Lấy danh sách lịch thuê của bạn thành công"));
     }
+
 
     @SuppressWarnings("null")
     @PostMapping("/create/{vehicleId}")
-    public ResponseEntity<?> createBooking(
+    public ResponseEntity<ApiResponse<BookingDTO>> createBooking(
             @PathVariable Integer vehicleId,
             @RequestBody Booking booking,
             @RequestParam Integer pickupLocationId,
@@ -47,10 +55,23 @@ public class BookingController {
             booking.setVehicle(vehicleService.getById(vehicleId));
             booking.setPickupLocation(locationRepository.findById(pickupLocationId).orElse(null));
             booking.setReturnLocation(locationRepository.findById(returnLocationId).orElse(null));
+            
             Booking saved = bookingService.createBooking(booking);
-            return ResponseEntity.ok(convertToDTO(saved));
+            BookingDTO dto = convertToDTO(saved);
+            
+            URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(saved.getBookingId())
+                    .toUri();
+            
+            return ResponseEntity.created(location)
+                    .body(ApiResponse.created(dto, "Đặt xe thành công!"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<BookingDTO>builder()
+                            .success(false)
+                            .message("Đặt xe thất bại: " + e.getMessage())
+                            .build());
         }
     }
 

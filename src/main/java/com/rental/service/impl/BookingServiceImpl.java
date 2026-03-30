@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -26,14 +28,30 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public Page<Booking> getAllBookings(Pageable pageable) {
+        return bookingRepository.findAllByOrderByStartDateDesc(pageable);
+    }
+
+    @Override
     public List<Booking> getBookingsByCustomer(Integer userId) {
         return bookingRepository.findByCustomerUserId(userId);
+    }
+
+    @Override
+    public Page<Booking> getBookingsByCustomer(Integer userId, Pageable pageable) {
+        return bookingRepository.findByCustomerUserId(userId, pageable);
     }
 
     @Override
     public List<Booking> getBookingsByStatus(Booking.Status status) {
         return bookingRepository.findByStatus(status);
     }
+
+    @Override
+    public Page<Booking> getBookingsByStatus(Booking.Status status, Pageable pageable) {
+        return bookingRepository.findByStatus(status, pageable);
+    }
+
 
     @Override
     public Booking getById(Integer id) {

@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -22,6 +24,12 @@ public class CustomerServiceImpl implements CustomerService {
     public List<Customer> getAll() {
         return customerRepository.findAll();
     }
+
+    @Override
+    public Page<Customer> getAll(Pageable pageable) {
+        return customerRepository.findAll(pageable);
+    }
+
 
     @Override
     public Customer getById(Integer id) {

@@ -1,5 +1,6 @@
 package com.rental.controller;
 
+import com.rental.dto.ApiResponse;
 import com.rental.dto.FileResponseDTO;
 import com.rental.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -18,18 +19,20 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(
+    public ResponseEntity<ApiResponse<FileResponseDTO>> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("folder") String folder) {
         
         try {
             FileResponseDTO response = fileService.saveFile(file, folder);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(response, "Tải tệp lên thành công"));
         } catch (IllegalArgumentException | SecurityException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Lỗi hệ thống khi lưu file: " + e.getMessage());
+                    .body(ApiResponse.error("Lỗi hệ thống khi lưu file: " + e.getMessage()));
         }
     }
 }

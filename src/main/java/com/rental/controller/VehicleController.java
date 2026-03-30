@@ -1,13 +1,19 @@
 package com.rental.controller;
 
-import com.rental.entity.Vehicle;
+import com.rental.dto.ApiResponse;
 import com.rental.dto.VehicleDTO;
 import com.rental.dto.VehicleImageDTO;
+import com.rental.entity.Vehicle;
 import com.rental.service.VehicleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,22 +25,34 @@ public class VehicleController {
     private final VehicleService vehicleService;
 
     @GetMapping
-    public List<VehicleDTO> getAll(@RequestParam(required = false) String type) {
-        if (type != null) {
-            return vehicleService.getAvailableByType(type).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<ApiResponse<Page<VehicleDTO>>> getAll(
+            @RequestParam(required = false) String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("vehicleId").descending());
+        Page<Vehicle> vehicles;
+        
+        if (type != null && !type.isEmpty()) {
+            vehicles = vehicleService.getAvailableByType(type, pageable);
+        } else {
+            vehicles = vehicleService.getAvailableVehicles(pageable);
         }
-        return vehicleService.getAvailableVehicles().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        
+        Page<VehicleDTO> dtos = vehicles.map(this::convertToDTO);
+        
+        return ResponseEntity.ok(ApiResponse.success(dtos, "Lấy danh sách xe trống thành công"));
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleDTO> getById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<VehicleDTO>> getById(@PathVariable Integer id) {
         Vehicle vehicle = vehicleService.getById(id);
-        if (vehicle == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(convertToDTO(vehicle));
+        if (vehicle == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.notFound("Không tìm thấy xe với mã: " + id));
+        }
+        return ResponseEntity.ok(ApiResponse.success(convertToDTO(vehicle), "Lấy thông tin xe thành công"));
     }
 
     private VehicleDTO convertToDTO(Vehicle vehicle) {

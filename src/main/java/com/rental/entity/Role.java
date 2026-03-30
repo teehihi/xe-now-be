@@ -13,6 +13,12 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Role {
+    
+    public enum RoleName {
+        ADMIN, STAFF, CUSTOMER
+    }
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "RoleID")
@@ -36,3 +42,4 @@ public class Role {
     )
     private List<Permission> permissions;
 }
+

@@ -38,6 +38,8 @@ public class DataSeeder implements CommandLineRunner {
         roleRepo.findByRoleName("CUSTOMER")
                 .orElseGet(() -> roleRepo.save(Role.builder().roleName("CUSTOMER").build()));
 
+
+
         // Locations
         if (locationRepo.count() == 0) {
             Location hcm = locationRepo.save(Location.builder()

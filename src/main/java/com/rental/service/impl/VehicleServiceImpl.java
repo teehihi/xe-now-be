@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -31,14 +33,30 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    public Page<Vehicle> getAllVehicles(Pageable pageable) {
+        return vehicleRepository.findAll(pageable);
+    }
+
+    @Override
     public List<Vehicle> getAvailableVehicles() {
         return vehicleRepository.findByStatus(Vehicle.Status.Available);
+    }
+
+    @Override
+    public Page<Vehicle> getAvailableVehicles(Pageable pageable) {
+        return vehicleRepository.findByStatus(Vehicle.Status.Available, pageable);
     }
 
     @Override
     public List<Vehicle> getAvailableByType(String type) {
         return vehicleRepository.findAvailableByType(type);
     }
+
+    @Override
+    public Page<Vehicle> getAvailableByType(String type, Pageable pageable) {
+        return vehicleRepository.findAvailableByType(type, pageable);
+    }
+
 
     @Override
     public Vehicle getById(Integer id) {

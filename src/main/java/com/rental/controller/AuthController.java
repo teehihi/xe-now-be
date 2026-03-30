@@ -1,22 +1,26 @@
 package com.rental.controller;
 
-import com.rental.dto.AuthResponseDTO;
+import com.rental.dto.ApiResponse;
 import com.rental.dto.LoginRequest;
 import com.rental.entity.RefreshToken;
 import com.rental.entity.Role;
 import com.rental.entity.User;
+import com.rental.exception.DuplicateResourceException;
+import com.rental.exception.ResourceNotFoundException;
 import com.rental.repository.RefreshTokenRepository;
 import com.rental.repository.RoleRepository;
 import com.rental.repository.UserRepository;
 import com.rental.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CookieValue;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -37,197 +41,159 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        try {
-            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-                return ResponseEntity.badRequest().body("Email đã được sử dụng");
-            }
-            if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-                return ResponseEntity.badRequest().body("Username đã được sử dụng");
-            }
-            
-            Role customerRole = roleRepository.findByRoleName("CUSTOMER")
-                    .orElseThrow(() -> new RuntimeException("Role CUSTOMER không tồn tại"));
-            
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            user.setRoles(List.of(customerRole));
-            user.setStatus(User.Status.Active);
-            
-            User savedUser = userRepository.save(user);
-
-            // Generate Tokens
-            String roleStr = "CUSTOMER";
-            String accessToken = jwtUtil.generateAccessToken(savedUser.getUsername(), roleStr, savedUser.getUserId());
-            String refreshTokenStr = jwtUtil.generateRefreshToken(savedUser.getUsername());
-
-            // Save Refresh Token (Hashed)
-            RefreshToken refreshToken = new RefreshToken();
-            refreshToken.setToken(jwtUtil.hashToken(refreshTokenStr));
-            refreshToken.setUser(savedUser);
-            refreshToken.setExpiresAt(Instant.now().plus(7, ChronoUnit.DAYS));
-            refreshTokenRepository.save(refreshToken);
-
-            Map<String, Object> userMap = new HashMap<>();
-            userMap.put("userId", savedUser.getUserId());
-            userMap.put("username", savedUser.getUsername());
-            userMap.put("fullName", savedUser.getFullName());
-            userMap.put("email", savedUser.getEmail());
-            userMap.put("phone", savedUser.getPhone());
-            userMap.put("address", savedUser.getAddress());
-            userMap.put("gender", savedUser.getGender());
-            userMap.put("avatar", savedUser.getAvatar());
-            userMap.put("dateOfBirth", savedUser.getDateOfBirth());
-            userMap.put("status", savedUser.getStatus().toString());
-            userMap.put("role", roleStr);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Đăng ký thành công!");
-            response.put("authenticated", true);
-            response.put("accessToken", accessToken);
-            // refreshTokenStr is now in cookie
-            response.put("user", userMap);
-
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshTokenStr)
-                    .httpOnly(true)
-                    .secure(false) // true in production
-                    .path("/")
-                    .maxAge(7 * 24 * 60 * 60) // 7 days
-                    .sameSite("Lax")
-                    .build();
-            
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Đăng ký thất bại: " + e.getMessage());
+    public ResponseEntity<ApiResponse<Map<String, Object>>> register(@Valid @RequestBody User user, HttpServletRequest request) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new DuplicateResourceException("Email đã được sử dụng");
         }
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new DuplicateResourceException("Username đã được sử dụng");
+        }
+
+        Role customerRole = roleRepository.findByRoleName("CUSTOMER")
+                .orElseThrow(() -> new ResourceNotFoundException("Role CUSTOMER không tồn tại"));
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(List.of(customerRole));
+        user.setStatus(User.Status.Active);
+
+        User savedUser = userRepository.save(user);
+
+        String roleStr = "CUSTOMER";
+        String accessToken = jwtUtil.generateAccessToken(savedUser.getUsername(), roleStr, savedUser.getUserId());
+        String refreshTokenStr = jwtUtil.generateRefreshToken(savedUser.getUsername());
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(jwtUtil.hashToken(refreshTokenStr))
+                .user(savedUser)
+                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                .ipAddress(getClientIp(request))
+                .deviceInfo(request.getHeader("User-Agent"))
+                .build();
+        refreshTokenRepository.save(refreshToken);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("authenticated", true);
+        data.put("token", accessToken);
+        data.put("refreshToken", refreshTokenStr);
+        data.put("user", buildUserMap(savedUser, roleStr));
+
+        ResponseCookie cookie = buildRefreshTokenCookie(refreshTokenStr);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success(data, "Đăng ký thành công!"));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        try {
-            User user = userRepository.findByUsername(loginRequest.getUsername())
-                    .or(() -> userRepository.findByEmail(loginRequest.getUsername()))
-                    .orElse(null);
-            
-            if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-                return ResponseEntity.ok(new AuthResponseDTO("Sai tài khoản hoặc mật khẩu", null, null, false));
-            }
-            
-            if (user.getStatus() != User.Status.Active) {
-                return ResponseEntity.ok(new AuthResponseDTO("Tài khoản đã bị khóa", null, null, false));
-            }
-            
-            String roleStr = (user.getRoles() != null && !user.getRoles().isEmpty()) ? user.getRoles().get(0).getRoleName() : "CUSTOMER";
-            String accessToken = jwtUtil.generateAccessToken(user.getUsername(), roleStr, user.getUserId());
-            String refreshTokenStr = jwtUtil.generateRefreshToken(user.getUsername());
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        User user = userRepository.findByUsername(loginRequest.getUsername())
+                .or(() -> userRepository.findByEmail(loginRequest.getUsername()))
+                .orElse(null);
 
-            // Manage Refresh Token (Hashed)
-            refreshTokenRepository.deleteByUser(user);
-            RefreshToken refreshToken = new RefreshToken();
-            refreshToken.setToken(jwtUtil.hashToken(refreshTokenStr));
-            refreshToken.setUser(user);
-            refreshToken.setExpiresAt(Instant.now().plus(7, ChronoUnit.DAYS));
-            refreshTokenRepository.save(refreshToken);
-            
-            Map<String, Object> userMap = new HashMap<>();
-            userMap.put("userId", user.getUserId());
-            userMap.put("username", user.getUsername());
-            userMap.put("fullName", user.getFullName());
-            userMap.put("email", user.getEmail());
-            userMap.put("phone", user.getPhone());
-            userMap.put("address", user.getAddress());
-            userMap.put("gender", user.getGender());
-            userMap.put("avatar", user.getAvatar());
-            userMap.put("dateOfBirth", user.getDateOfBirth());
-            userMap.put("status", user.getStatus().toString());
-            userMap.put("role", roleStr);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Đăng nhập thành công");
-            response.put("authenticated", true);
-            response.put("accessToken", accessToken);
-            // refreshTokenStr is now in cookie
-            response.put("user", userMap);
-
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshTokenStr)
-                    .httpOnly(true)
-                    .secure(false)
-                    .path("/")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
-                    .build();
-            
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Đăng nhập thất bại: " + e.getMessage());
+        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Sai tài khoản hoặc mật khẩu"));
         }
+
+        if (user.getStatus() != User.Status.Active) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Tài khoản không có quyền truy cập"));
+        }
+
+        String roleStr = (user.getRoles() != null && !user.getRoles().isEmpty())
+                ? user.getRoles().get(0).getRoleName()
+                : "CUSTOMER";
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), roleStr, user.getUserId());
+        String refreshTokenStr = jwtUtil.generateRefreshToken(user.getUsername());
+
+        refreshTokenRepository.deleteByUser(user);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(jwtUtil.hashToken(refreshTokenStr))
+                .user(user)
+                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                .ipAddress(getClientIp(request))
+                .deviceInfo(request.getHeader("User-Agent"))
+                .build();
+        refreshTokenRepository.save(refreshToken);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("authenticated", true);
+        data.put("token", accessToken);
+        data.put("refreshToken", refreshTokenStr);
+        data.put("user", buildUserMap(user, roleStr));
+
+        ResponseCookie cookie = buildRefreshTokenCookie(refreshTokenStr);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success(data, "Đăng nhập thành công"));
     }
 
+
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(
-            @RequestBody(required = false) Map<String, String> request,
-            @CookieValue(name = "refreshToken", required = false) String cookieToken) {
-        
-        String refreshTokenStr = (request != null && request.containsKey("refreshToken")) 
-                ? request.get("refreshToken") : cookieToken;
-        
+    public ResponseEntity<ApiResponse<Map<String, Object>>> refresh(
+            @CookieValue(name = "refreshToken", required = false) String cookieToken,
+            @RequestBody(required = false) Map<String, String> requestBody,
+            HttpServletRequest request) {
+
+        String refreshTokenStr = (cookieToken != null && !cookieToken.isEmpty())
+                ? cookieToken
+                : (requestBody != null ? requestBody.get("refreshToken") : null);
+
         if (refreshTokenStr == null || refreshTokenStr.isEmpty()) {
-            return ResponseEntity.badRequest().body("Thiếu Refresh Token");
+            return ResponseEntity.badRequest().body(ApiResponse.error("Thiếu Refresh Token"));
         }
 
         String hashedToken = jwtUtil.hashToken(refreshTokenStr);
         return refreshTokenRepository.findByToken(hashedToken)
                 .map(tokenEntity -> {
-                    // Check if expired or revoked
                     if (tokenEntity.getExpiresAt().isBefore(Instant.now()) || tokenEntity.isRevoked()) {
-                        return ResponseEntity.status(401).body("Refresh Token đã hết hạn hoặc đã bị thu hồi");
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body(ApiResponse.<Map<String, Object>>error("Refresh Token đã hết hạn hoặc đã bị thu hồi"));
                     }
 
                     User user = tokenEntity.getUser();
-                    String roleStr = (user.getRoles() != null && !user.getRoles().isEmpty()) 
-                        ? user.getRoles().get(0).getRoleName() : "CUSTOMER";
+                    String roleStr = (user.getRoles() != null && !user.getRoles().isEmpty())
+                            ? user.getRoles().get(0).getRoleName()
+                            : "CUSTOMER";
 
-                    // Generate new pair
                     String newAccessToken = jwtUtil.generateAccessToken(user.getUsername(), roleStr, user.getUserId());
                     String newRefreshTokenStr = jwtUtil.generateRefreshToken(user.getUsername());
 
-                    // Rotate token (Revoke old, save new)
                     tokenEntity.setRevoked(true);
                     refreshTokenRepository.save(tokenEntity);
-                    
-                    RefreshToken newRefreshToken = new RefreshToken();
-                    newRefreshToken.setToken(jwtUtil.hashToken(newRefreshTokenStr));
-                    newRefreshToken.setUser(user);
-                    newRefreshToken.setExpiresAt(Instant.now().plus(7, ChronoUnit.DAYS));
+
+                    RefreshToken newRefreshToken = RefreshToken.builder()
+                            .token(jwtUtil.hashToken(newRefreshTokenStr))
+                            .user(user)
+                            .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                            .ipAddress(getClientIp(request))
+                            .deviceInfo(request.getHeader("User-Agent"))
+                            .build();
                     refreshTokenRepository.save(newRefreshToken);
 
-                    ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshTokenStr)
-                            .httpOnly(true)
-                            .secure(false)
-                            .path("/")
-                            .maxAge(7 * 24 * 60 * 60)
-                            .sameSite("Lax")
-                            .build();
+                    ResponseCookie cookie = buildRefreshTokenCookie(newRefreshTokenStr);
 
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("accessToken", newAccessToken);
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("token", newAccessToken);
+                    data.put("refreshToken", newRefreshTokenStr);
+
                     return ResponseEntity.ok()
                             .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                            .body(response);
+                            .body(ApiResponse.success(data, "Làm mới token thành công"));
                 })
-                .orElse(ResponseEntity.status(401).body("Refresh Token không hợp lệ"));
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Refresh Token không hợp lệ")));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(
-            @RequestBody(required = false) Map<String, String> request,
-            @CookieValue(name = "refreshToken", required = false) String cookieToken) {
-        
-        String refreshTokenStr = (request != null && request.containsKey("refreshToken")) 
-                ? request.get("refreshToken") : cookieToken;
+    public ResponseEntity<ApiResponse<Object>> logout(
+            @CookieValue(name = "refreshToken", required = false) String cookieToken,
+            @RequestBody(required = false) Map<String, String> requestBody) {
+
+        String refreshTokenStr = (cookieToken != null && !cookieToken.isEmpty())
+                ? cookieToken
+                : (requestBody != null ? requestBody.get("refreshToken") : null);
 
         if (refreshTokenStr != null && !refreshTokenStr.isEmpty()) {
             String hashedToken = jwtUtil.hashToken(refreshTokenStr);
@@ -246,24 +212,36 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
-                .body(Map.of("message", "Đăng xuất thành công"));
+                .body(ApiResponse.success(null, "Đăng xuất thành công"));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Chưa đăng nhập");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Chưa đăng nhập"));
         }
-        
+
         String username = authentication.getName();
         User user = userRepository.findByUsername(username)
                 .or(() -> userRepository.findByEmail(username))
                 .orElse(null);
-        
+
         if (user == null) {
-            return ResponseEntity.status(404).body("Không tìm thấy người dùng");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Không tìm thấy người dùng"));
         }
-        
+
+        String roleStr = (user.getRoles() != null && !user.getRoles().isEmpty()) ? user.getRoles().get(0).getRoleName()
+                : "CUSTOMER";
+        Map<String, Object> data = new HashMap<>();
+        data.put("user", buildUserMap(user, roleStr));
+        data.put("authenticated", true);
+
+        return ResponseEntity.ok(ApiResponse.success(data, "Lấy thông tin người dùng thành công"));
+    }
+
+    private Map<String, Object> buildUserMap(User user, String role) {
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("userId", user.getUserId());
         userMap.put("username", user.getUsername());
@@ -275,12 +253,25 @@ public class AuthController {
         userMap.put("avatar", user.getAvatar());
         userMap.put("dateOfBirth", user.getDateOfBirth());
         userMap.put("status", user.getStatus().toString());
-        userMap.put("role", (user.getRoles() != null && !user.getRoles().isEmpty()) ? user.getRoles().get(0).getRoleName() : "CUSTOMER");
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("user", userMap);
-        response.put("authenticated", true);
-        
-        return ResponseEntity.ok(response);
+        userMap.put("role", role);
+        return userMap;
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
+
+    private ResponseCookie buildRefreshTokenCookie(String token) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
     }
 }
