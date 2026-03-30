@@ -1,5 +1,6 @@
 package com.rental.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,11 +18,13 @@ public class VehicleImage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "VehicleID")
+    @JsonIgnoreProperties({"images", "model", "currentLocation"})
     private Vehicle vehicle;
 
     @Column(name = "ImageURL", nullable = false, length = 255)
     private String imageUrl;
 
     @Column(name = "IsPrimary")
+    @Builder.Default
     private Boolean isPrimary = false;
 }

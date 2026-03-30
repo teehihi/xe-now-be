@@ -61,16 +61,16 @@ public class DataSeeder implements CommandLineRunner {
             Model everest = modelRepo.save(Model.builder().modelName("Everest").brand(ford).build());
 
             // Vehicles
-            vehicleRepo.save(Vehicle.builder().type("Sedan").currentLocation(hcm).licensePlate("51A-12345")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(hcm).licensePlate("51A-12345")
                     .model(vios).manufactureYear(2022).mileage(15000)
                     .pricePerDay(new BigDecimal("600000")).status(Vehicle.Status.Available).build());
-            vehicleRepo.save(Vehicle.builder().type("SUV").currentLocation(hcm).licensePlate("51B-67890")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(hcm).licensePlate("51B-67890")
                     .model(crv).manufactureYear(2023).mileage(8000)
                     .pricePerDay(new BigDecimal("1200000")).status(Vehicle.Status.Available).build());
-            vehicleRepo.save(Vehicle.builder().type("Hatchback").currentLocation(hn).licensePlate("29H-11111")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(hn).licensePlate("29H-11111")
                     .model(m3).manufactureYear(2023).mileage(5000)
                     .pricePerDay(new BigDecimal("800000")).status(Vehicle.Status.Available).build());
-            vehicleRepo.save(Vehicle.builder().type("SUV").currentLocation(dn).licensePlate("43A-22222")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(dn).licensePlate("43A-22222")
                     .model(everest).manufactureYear(2022).mileage(20000)
                     .pricePerDay(new BigDecimal("1500000")).status(Vehicle.Status.Available).build());
         }
