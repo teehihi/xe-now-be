@@ -23,6 +23,23 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<Object>> updateMe(
+            @RequestBody java.util.Map<String, Object> body,
+            org.springframework.security.core.Authentication authentication) {
+        if (authentication == null) return ResponseEntity.status(401).body(ApiResponse.error("Chưa đăng nhập"));
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+        if (body.containsKey("fullName")) user.setFullName((String) body.get("fullName"));
+        if (body.containsKey("phone")) user.setPhone((String) body.get("phone"));
+        if (body.containsKey("email")) user.setEmail((String) body.get("email"));
+        if (body.containsKey("dateOfBirth") && body.get("dateOfBirth") != null) {
+            user.setDateOfBirth(java.time.LocalDate.parse((String) body.get("dateOfBirth")));
+        }
+        userRepository.save(user);
+        return ResponseEntity.ok(ApiResponse.success(null, "Cập nhật thành công"));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         List<User> users = userRepository.findAll();
