@@ -9,10 +9,12 @@ import com.rental.repository.ModelRepository;
 import com.rental.repository.LocationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
@@ -59,10 +61,12 @@ public class VehicleService {
         return modelRepository.findByBrandBrandId(brandId);
     }
 
+    @Transactional
     public Vehicle save(Vehicle vehicle) {
         return vehicleRepository.save(vehicle);
     }
 
+    @Transactional
     public void deleteById(Integer id) {
         vehicleRepository.deleteById(id);
     }
@@ -72,12 +76,14 @@ public class VehicleService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chi nhánh với ID: " + id));
     }
 
+    @Transactional
     public Vehicle updateStatus(Integer vehicleId, Vehicle.Status status) {
         Vehicle vehicle = getById(vehicleId);
         vehicle.setStatus(status);
         return vehicleRepository.save(vehicle);
     }
 
+    @Transactional
     public Vehicle markAsMaintained(Integer vehicleId) {
         Vehicle vehicle = getById(vehicleId);
         vehicle.setLastMaintenanceMileage(vehicle.getMileage());

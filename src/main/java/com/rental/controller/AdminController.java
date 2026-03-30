@@ -345,7 +345,7 @@ public class AdminController {
         if (dto.getType() != null) {
             v.setType(dto.getType());
         } else if (v.getType() == null) {
-            v.setType("Xe ô tô");
+            v.setType("Xe Ô Tô");
         }
         
         if (dto.getLocationId() != null && dto.getLocationId() > 0) {

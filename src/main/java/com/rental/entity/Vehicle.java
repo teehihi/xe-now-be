@@ -111,7 +111,7 @@ public class Vehicle {
     @Builder.Default
     private Integer totalReviews = 0;
 
-    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private java.util.List<VehicleImage> images = new java.util.ArrayList<>();
 

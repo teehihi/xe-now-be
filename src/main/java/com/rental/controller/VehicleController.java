@@ -2,6 +2,7 @@ package com.rental.controller;
 
 import com.rental.entity.Vehicle;
 import com.rental.dto.VehicleDTO;
+import com.rental.dto.VehicleImageDTO;
 import com.rental.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -84,8 +85,27 @@ public class VehicleController {
             dto.setLocationName(locationName);
         }
         
-        // Image - placeholder for now
-        dto.setImage("/images/car-toyota-camry.webp");
+        // Images from database
+        if (vehicle.getImages() != null && !vehicle.getImages().isEmpty()) {
+            List<VehicleImageDTO> imgDTOs = vehicle.getImages().stream()
+                .map(img -> VehicleImageDTO.builder()
+                    .imageId(img.getImageId())
+                    .imageUrl(img.getImageUrl())
+                    .isPrimary(Boolean.TRUE.equals(img.getIsPrimary()))
+                    .build())
+                .collect(Collectors.toList());
+            dto.setImages(imgDTOs);
+            
+            // Set primary image URL for main display
+            String primaryUrl = imgDTOs.stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+                .map(VehicleImageDTO::getImageUrl)
+                .findFirst()
+                .orElse(imgDTOs.isEmpty() ? "/images/car-toyota-camry.webp" : imgDTOs.get(0).getImageUrl());
+            dto.setImage(primaryUrl);
+        } else {
+            dto.setImage("/images/car-toyota-camry.webp");
+        }
         
         return dto;
     }
