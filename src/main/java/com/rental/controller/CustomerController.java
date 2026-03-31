@@ -1,11 +1,13 @@
 package com.rental.controller;
 
+import com.rental.dto.ApiResponse;
 import com.rental.dto.CustomerResponseDTO;
 import com.rental.entity.Customer;
 import com.rental.entity.User;
 import com.rental.repository.CustomerRepository;
 import com.rental.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -20,29 +22,31 @@ public class CustomerController {
     private final UserRepository userRepository;
 
     @GetMapping("/verify-status")
-    public ResponseEntity<?> checkVerificationStatus(Authentication authentication) {
+    public ResponseEntity<ApiResponse<VerificationStatusDTO>> checkVerificationStatus(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Chưa đăng nhập");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Chưa đăng nhập"));
         }
 
         User user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
         boolean isVerified = customerRepository.findById(user.getUserId()).isPresent();
+        VerificationStatusDTO status = new VerificationStatusDTO(isVerified, user.getUserId());
         
-        return ResponseEntity.ok(new VerificationStatusDTO(isVerified, user.getUserId()));
+        return ResponseEntity.ok(ApiResponse.success(status, "Kiểm tra trạng thái xác minh thành công"));
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getCustomerById(@PathVariable Integer userId, Authentication authentication) {
+    public ResponseEntity<ApiResponse<CustomerResponseDTO>> getCustomerById(@PathVariable Integer userId, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Chưa đăng nhập");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Chưa đăng nhập"));
         }
 
         Customer customer = customerRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin khách hàng"));
         
-        // Convert to DTO to avoid lazy loading issues
         CustomerResponseDTO dto = CustomerResponseDTO.builder()
                 .userId(customer.getUserId())
                 .identityCard(customer.getIdentityCard())
@@ -55,36 +59,36 @@ public class CustomerController {
                 .driverLicenseExpiry(customer.getDriverLicenseExpiry())
                 .build();
         
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(ApiResponse.success(dto, "Lấy thông tin khách hàng thành công"));
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyIdentity(@RequestBody Customer customer, Authentication authentication) {
+    public ResponseEntity<ApiResponse<Object>> verifyIdentity(@RequestBody Customer customer, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Chưa đăng nhập");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Chưa đăng nhập"));
         }
 
         try {
             User user = userRepository.findByUsername(authentication.getName())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
-            // Check if already verified
             if (customerRepository.findById(user.getUserId()).isPresent()) {
-                return ResponseEntity.badRequest().body("Tài khoản đã được xác minh");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("Tài khoản đã được xác minh"));
             }
 
-            // Create customer record
             customer.setUserId(user.getUserId());
             customer.setUser(user);
             customerRepository.save(customer);
 
-            return ResponseEntity.ok("Xác minh danh tính thành công!");
+            return ResponseEntity.ok(ApiResponse.success(null, "Xác minh danh tính thành công!"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Xác minh thất bại: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Xác minh thất bại: " + e.getMessage()));
         }
     }
 
-    // DTO for verification status
     public static class VerificationStatusDTO {
         public boolean verified;
         public Integer userId;

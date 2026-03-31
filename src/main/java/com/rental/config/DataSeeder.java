@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         if (userRepo.count() > 0) return; // Chỉ seed lần đầu
 
@@ -35,6 +37,8 @@ public class DataSeeder implements CommandLineRunner {
                 .orElseGet(() -> roleRepo.save(Role.builder().roleName("STAFF").build()));
         roleRepo.findByRoleName("CUSTOMER")
                 .orElseGet(() -> roleRepo.save(Role.builder().roleName("CUSTOMER").build()));
+
+
 
         // Locations
         if (locationRepo.count() == 0) {
@@ -61,16 +65,16 @@ public class DataSeeder implements CommandLineRunner {
             Model everest = modelRepo.save(Model.builder().modelName("Everest").brand(ford).build());
 
             // Vehicles
-            vehicleRepo.save(Vehicle.builder().type("Sedan").currentLocation(hcm).licensePlate("51A-12345")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(hcm).licensePlate("51A-12345")
                     .model(vios).manufactureYear(2022).mileage(15000)
                     .pricePerDay(new BigDecimal("600000")).status(Vehicle.Status.Available).build());
-            vehicleRepo.save(Vehicle.builder().type("SUV").currentLocation(hcm).licensePlate("51B-67890")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(hcm).licensePlate("51B-67890")
                     .model(crv).manufactureYear(2023).mileage(8000)
                     .pricePerDay(new BigDecimal("1200000")).status(Vehicle.Status.Available).build());
-            vehicleRepo.save(Vehicle.builder().type("Hatchback").currentLocation(hn).licensePlate("29H-11111")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(hn).licensePlate("29H-11111")
                     .model(m3).manufactureYear(2023).mileage(5000)
                     .pricePerDay(new BigDecimal("800000")).status(Vehicle.Status.Available).build());
-            vehicleRepo.save(Vehicle.builder().type("SUV").currentLocation(dn).licensePlate("43A-22222")
+            vehicleRepo.save(Vehicle.builder().type("Xe Ô Tô").currentLocation(dn).licensePlate("43A-22222")
                     .model(everest).manufactureYear(2022).mileage(20000)
                     .pricePerDay(new BigDecimal("1500000")).status(Vehicle.Status.Available).build());
         }
@@ -84,7 +88,7 @@ public class DataSeeder implements CommandLineRunner {
                     .email("admin@xenow.vn")
                     .phone("0900000000")
                     .status(User.Status.Active)
-                    .role(roleRepo.findByRoleName("ADMIN").get())
+                    .roles(List.of(roleRepo.findByRoleName("ADMIN").get()))
                     .build());
         }
 
@@ -97,7 +101,7 @@ public class DataSeeder implements CommandLineRunner {
                     .email("khach1@xenow.vn")
                     .phone("0987654321")
                     .status(User.Status.Active)
-                    .role(roleRepo.findByRoleName("CUSTOMER").get())
+                    .roles(List.of(roleRepo.findByRoleName("CUSTOMER").get()))
                     .build());
             
             Customer customer = customerRepo.save(Customer.builder()

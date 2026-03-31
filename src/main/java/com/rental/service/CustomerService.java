@@ -1,19 +1,14 @@
 package com.rental.service;
 
 import com.rental.entity.Customer;
-import com.rental.entity.User;
-import com.rental.repository.CustomerRepository;
-import com.rental.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class CustomerService {
+public interface CustomerService {
 
-    private final CustomerRepository customerRepository;
-    private final UserRepository userRepository;
+    List<Customer> getAll();
+    Page<Customer> getAll(Pageable pageable);
 
     public List<Customer> getAll() {
         return customerRepository.findAll();
@@ -56,4 +51,8 @@ public class CustomerService {
         
         return customerRepository.save(customer);
     }
+    Customer getById(Integer id);
+    Customer findByUserId(Integer userId);
+    Customer findByEmail(String email);
+    Customer register(Customer customer);
 }

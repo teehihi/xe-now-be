@@ -1,9 +1,10 @@
 package com.rental.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "Role")
@@ -12,6 +13,12 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class Role {
+    
+    public enum RoleName {
+        ADMIN, STAFF, CUSTOMER
+    }
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "RoleID")
@@ -23,11 +30,16 @@ public class Role {
     @Column(name = "DeletedAt")
     private LocalDateTime deletedAt;
 
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<User> users;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "RolePermission",
-        joinColumns = @JoinColumn(name = "RoleID"),
-        inverseJoinColumns = @JoinColumn(name = "PermissionID")
+        name = "permission_role",
+        joinColumns = @JoinColumn(name = "role_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
-    private Set<Permission> permissions;
+    private List<Permission> permissions;
 }
+
