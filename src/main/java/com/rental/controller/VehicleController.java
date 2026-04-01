@@ -36,7 +36,7 @@ public class VehicleController {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("vehicleId").descending());
         
-        List<Vehicle> allVehicles = vehicleService.getAvailableVehicles();
+        List<Vehicle> allVehicles = vehicleService.getAllVehicles();
         
         // Apply filters
         List<Vehicle> filtered = allVehicles.stream()

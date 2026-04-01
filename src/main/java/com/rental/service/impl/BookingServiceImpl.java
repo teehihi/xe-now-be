@@ -65,12 +65,37 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public Booking createBooking(Booking booking) {
+        Vehicle vehicle = vehicleRepository.findById(booking.getVehicle().getVehicleId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phương tiện"));
+
+        // 1. Kiểm tra trạng thái xe
+        if (vehicle.getStatus() == Vehicle.Status.Maintenance) {
+            throw new RuntimeException("Phương tiện hiện đang trong quá trình bảo trì, không thể đặt xe.");
+        }
+        if (vehicle.getStatus() == Vehicle.Status.Broken) {
+            throw new RuntimeException("Phương tiện hiện đang gặp sự cố kỹ thuật, không thể đặt xe.");
+        }
+
+        // 2. Kiểm tra trùng lịch (Overlapping bookings)
+        List<Booking.Status> activeStatuses = List.of(Booking.Status.Confirmed, Booking.Status.Ongoing);
+        List<Booking> overlaps = bookingRepository.findOverlappingBookings(
+                vehicle.getVehicleId(), 
+                booking.getStartDate(), 
+                booking.getEndDate(), 
+                activeStatuses
+        );
+
+        if (!overlaps.isEmpty()) {
+            throw new RuntimeException("Phương tiện đã được thuê hoặc có lịch đặt trong khoảng thời gian này. Vui lòng chọn thời gian khác hoặc xe khác.");
+        }
+
         long days = ChronoUnit.DAYS.between(booking.getStartDate(), booking.getEndDate());
         if (days <= 0) throw new IllegalArgumentException("Ngày trả phải sau ngày nhận xe");
 
-        BigDecimal pricePerDay = booking.getVehicle().getPricePerDay();
+        BigDecimal pricePerDay = vehicle.getPricePerDay();
         booking.setTotalPrice(pricePerDay.multiply(BigDecimal.valueOf(days)));
         booking.setStatus(Booking.Status.Pending);
+        booking.setVehicle(vehicle); // Ensure we use the managed entity
         return bookingRepository.save(booking);
     }
 
@@ -90,6 +115,12 @@ public class BookingServiceImpl implements BookingService {
             if (mileage != null && mileage > vehicle.getMileage()) {
                 vehicle.setMileage(mileage);
             }
+            
+            // Tự động kiểm tra bảo trì (Ngưỡng 5000km)
+            if (vehicle.getMileage() - vehicle.getLastMaintenanceMileage() >= 5000) {
+                vehicle.setStatus(Vehicle.Status.Maintenance);
+            }
+            
             vehicleRepository.save(vehicle);
             
             booking.setReturnMileage(mileage);
