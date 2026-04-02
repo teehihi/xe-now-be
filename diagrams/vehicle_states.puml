@@ -1,8 +1,0 @@
-@startuml Vehicle_States
-[*] --> Available
-Available --> Booked : Booking Confirmed
-Booked --> Available : Vehicle Returned
-Available --> Maintenance : Check-up needed
-Maintenance --> Available : Repair complete
-Booked --> Maintenance : Accident reported
-@enduml

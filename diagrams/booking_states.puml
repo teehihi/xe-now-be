@@ -1,8 +1,0 @@
-@startuml Booking_States
-[*] --> Pending : Customer submits
-Pending --> Confirmed : Manager accepts
-Pending --> Rejected : Manager denies
-Confirmed --> Ongoing : Customer pickups
-Ongoing --> Finished : Customer returns
-Confirmed --> Cancelled : Customer cancels early
-@enduml
