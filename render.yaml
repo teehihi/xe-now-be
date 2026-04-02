@@ -1,6 +1,6 @@
 services:
   - type: web
     name: xe-now-be
-    env: java
+    runtime: java
     buildCommand: mvn clean package
     startCommand: java -jar target/*.jar
