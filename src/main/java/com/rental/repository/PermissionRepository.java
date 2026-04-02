@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, Integer> {
     Optional<Permission> findByName(String name);
+    Optional<Permission> findByApiPathAndMethod(String apiPath, String method);
 
     @Query("SELECT p FROM Permission p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.apiPath) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.module) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Permission> search(String keyword, Pageable pageable);

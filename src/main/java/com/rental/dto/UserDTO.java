@@ -1,6 +1,7 @@
 package com.rental.dto;
 
 import lombok.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -17,4 +18,6 @@ public class UserDTO {
     private String status;
     private Set<String> roles;
     private LocalDateTime createdAt;
+    private LocalDate dateOfBirth;
+    private String address;
 }

@@ -36,17 +36,21 @@ public class DataSeeder implements CommandLineRunner {
         @Transactional
         public void run(String... args) {
                 if (userRepository.count() > 0) {
-                        java.util.Optional<Permission> ocrPerm = permissionRepository.findByName("OCR_CUSTOMER");
-                        if (!ocrPerm.isPresent()) {
-                            Permission p = Permission.builder().name("OCR_CUSTOMER").apiPath("/api/customer/ocr/**").method("POST").module("CUSTOMER").build();
-                            permissionRepository.save(p);
-                            roleRepository.findByName("CUSTOMER").ifPresent(r -> {
-                                r.getPermissions().add(p);
-                                roleRepository.save(r);
-                            });
-                            log.info(">>> Injected OCR_CUSTOMER permission");
-                        }
-                        log.info(">>> Database already seeded — skipping");
+                        injectMissingPermission(
+                            "OCR_CUSTOMER", "/api/customer/ocr/**", "POST", "CUSTOMER", "CUSTOMER");
+                        injectMissingPermission(
+                            "CREATE_BOOKING_OP", "/api/bookings/create/**", "POST", "BOOKING", "CUSTOMER");
+                        injectMissingPermission(
+                            "VIEW_MY_BOOKINGS", "/api/bookings/my-bookings", "GET", "BOOKING", "CUSTOMER");
+                        injectMissingPermission(
+                            "VIEW_BOOKING_DETAIL", "/api/bookings/**", "GET", "BOOKING", "CUSTOMER");
+                        injectMissingPermission(
+                            "CANCEL_BOOKING_OP", "/api/bookings/*/cancel", "POST", "BOOKING", "CUSTOMER");
+                        injectMissingPermission(
+                            "CONFIRM_PAYMENT_OP", "/api/bookings/*/confirm-payment", "POST", "BOOKING", "CUSTOMER");
+                        injectMissingPermission(
+                            "PAYMENT_CALLBACK", "/api/bookings/*/vnpay-return", "GET", "BOOKING", "CUSTOMER");
+                        log.info(">>> Database already seeded — skipping, permissions patched");
                         return;
                 }
 
@@ -213,6 +217,28 @@ public class DataSeeder implements CommandLineRunner {
                 return all.stream()
                                 .filter(p -> names.contains(p.getName()))
                                 .collect(Collectors.toList());
+        }
+
+        private void injectMissingPermission(String name, String apiPath, String method, String module, String roleName) {
+                // First check by name (already has this permission)
+                if (permissionRepository.findByName(name).isPresent()) return;
+
+                // Then check by path+method to avoid duplicate unique constraint
+                Permission p = permissionRepository.findByApiPathAndMethod(apiPath, method)
+                    .orElseGet(() -> {
+                        Permission newP = Permission.builder().name(name).apiPath(apiPath).method(method).module(module).build();
+                        return permissionRepository.save(newP);
+                    });
+
+                // Assign to role if not already assigned
+                roleRepository.findByName(roleName).ifPresent(r -> {
+                    boolean alreadyHas = r.getPermissions().stream().anyMatch(x -> x.getId().equals(p.getId()));
+                    if (!alreadyHas) {
+                        r.getPermissions().add(p);
+                        roleRepository.save(r);
+                        log.info(">>> Assigned permission {} to role {}", name, roleName);
+                    }
+                });
         }
 
         private void seedUsers(List<Role> allRoles) {

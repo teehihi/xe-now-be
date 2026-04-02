@@ -697,7 +697,9 @@ public class AdminController {
                 .phone(user.getPhone())
                 .status(user.getStatus().name())
                 .createdAt(user.getCreatedAt())
-            .roles(roleNames)
+                .dateOfBirth(user.getDateOfBirth())
+                .address(user.getAddress())
+                .roles(roleNames)
                 .build();
     }
 
