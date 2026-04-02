@@ -36,6 +36,16 @@ public class DataSeeder implements CommandLineRunner {
         @Transactional
         public void run(String... args) {
                 if (userRepository.count() > 0) {
+                        java.util.Optional<Permission> ocrPerm = permissionRepository.findByName("OCR_CUSTOMER");
+                        if (!ocrPerm.isPresent()) {
+                            Permission p = Permission.builder().name("OCR_CUSTOMER").apiPath("/api/customer/ocr/**").method("POST").module("CUSTOMER").build();
+                            permissionRepository.save(p);
+                            roleRepository.findByName("CUSTOMER").ifPresent(r -> {
+                                r.getPermissions().add(p);
+                                roleRepository.save(r);
+                            });
+                            log.info(">>> Injected OCR_CUSTOMER permission");
+                        }
                         log.info(">>> Database already seeded — skipping");
                         return;
                 }
@@ -65,6 +75,7 @@ public class DataSeeder implements CommandLineRunner {
                 // CUSTOMER self-service module: /api/customer
                 permissions.add(createPermission("VIEW_CUSTOMER", "/api/customer/**", "GET", "CUSTOMER"));
                 permissions.add(createPermission("VERIFY_CUSTOMER", "/api/customer/verify", "POST", "CUSTOMER"));
+                permissions.add(createPermission("OCR_CUSTOMER", "/api/customer/ocr/**", "POST", "CUSTOMER"));
                 permissions.add(createPermission("UPDATE_CUSTOMER_SELF", "/api/customer/**", "PUT", "CUSTOMER"));
 
                 // ===== BOOKING module: /api/bookings =====

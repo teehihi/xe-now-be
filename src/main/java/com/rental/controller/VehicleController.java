@@ -112,7 +112,9 @@ public class VehicleController {
             dto.setType(vehicle.getType());
         }
         
-        // Fuel and transmission
+        // Fuel, transmission and specs
+        dto.setSeats(vehicle.getSeats());
+        dto.setEngineCapacity(vehicle.getEngineCapacity());
         dto.setFuelType(vehicle.getFuelType());
         dto.setFuel(vehicle.getFuelType());
         dto.setTransmission(vehicle.getTransmission());

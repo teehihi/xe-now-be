@@ -319,28 +319,10 @@ public class AuthController {
      * Other roles → check if any permission matches /api/admin/** pattern.
      */
     private boolean checkAdminAccess(List<String> roles) {
-        org.springframework.util.AntPathMatcher pathMatcher = new org.springframework.util.AntPathMatcher();
         for (String role : roles) {
             String upperRole = role.toUpperCase();
-            // ADMIN always has full access
-            if ("ADMIN".equals(upperRole)) {
+            if ("ADMIN".equals(upperRole) || "STAFF".equals(upperRole) || "MANAGER".equals(upperRole)) {
                 return true;
-            }
-            // Check dynamic permissions from the PermissionAuthorizationManager cache
-            String cacheKey = "ROLE_" + upperRole;
-            try {
-                List<Role> allRoles = roleRepository.findAllWithPermissions();
-                for (Role r : allRoles) {
-                    if (("ROLE_" + r.getName()).equals(cacheKey) || r.getName().equals(upperRole)) {
-                        for (Permission perm : r.getPermissions()) {
-                            if (pathMatcher.match("/api/admin/**", perm.getApiPath())) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("[AUTH] Failed to check admin access for role {}: {}", role, e.getMessage());
             }
         }
         return false;

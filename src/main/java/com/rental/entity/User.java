@@ -1,6 +1,7 @@
 package com.rental.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -33,7 +34,7 @@ public class User {
 
     @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "Password", nullable = false, length = 255)
     private String password;
 

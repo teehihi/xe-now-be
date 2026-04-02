@@ -102,7 +102,15 @@ public class CustomerController {
     // Verify identity (Combining Step 1 and 2 from UI)
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<Object>> verifyIdentity(
-            @ModelAttribute Customer customer, 
+            @RequestParam("identityCard") String identityCard,
+            @RequestParam(value = "identityCardIssueDate", required = false) String identityCardIssueDate,
+            @RequestParam(value = "identityCardExpiry", required = false) String identityCardExpiry,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "dateOfBirth", required = false) String dateOfBirth,
+            @RequestParam("driverLicense") String driverLicense,
+            @RequestParam(value = "driverLicenseClass", required = false) String driverLicenseClass,
+            @RequestParam(value = "driverLicenseIssueDate", required = false) String driverLicenseIssueDate,
+            @RequestParam(value = "driverLicenseExpiry", required = false) String driverLicenseExpiry,
             Authentication authentication) {
         
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -118,9 +126,38 @@ public class CustomerController {
             }
 
             // Save Customer (CCCD)
-            customer.setUserId(user.getUserId());
+            Customer customer = new Customer();
             customer.setUser(user);
+            customer.setIdentityCard(identityCard);
+            customer.setAddress(address);
+            if (identityCardIssueDate != null && !identityCardIssueDate.isEmpty()) {
+                customer.setIdentityCardIssueDate(java.time.LocalDate.parse(identityCardIssueDate));
+            }
+            if (identityCardExpiry != null && !identityCardExpiry.isEmpty()) {
+                customer.setIdentityCardExpiry(java.time.LocalDate.parse(identityCardExpiry));
+            }
             customerRepository.save(customer);
+            
+            // Update User DateOfBirth
+            if (dateOfBirth != null && !dateOfBirth.isEmpty()) {
+                user.setDateOfBirth(java.time.LocalDate.parse(dateOfBirth));
+                userRepository.save(user);
+            }
+
+            // Save Driver License
+            DriverLicense dl = new DriverLicense();
+            dl.setCustomer(customer);
+            dl.setLicenseNumber(driverLicense);
+            dl.setLicenseClass(driverLicenseClass);
+            if (driverLicenseIssueDate != null && !driverLicenseIssueDate.isEmpty()) {
+                dl.setIssueDate(java.time.LocalDate.parse(driverLicenseIssueDate));
+            } else {
+                dl.setIssueDate(java.time.LocalDate.now());
+            }
+            if (driverLicenseExpiry != null && !driverLicenseExpiry.isEmpty() && !driverLicenseExpiry.equals("Không thời hạn")) {
+                dl.setExpiryDate(java.time.LocalDate.parse(driverLicenseExpiry));
+            }
+            driverLicenseRepository.save(dl);
 
             return ResponseEntity.ok(ApiResponse.success(null, "Xác minh danh tính thành công!"));
         } catch (Exception e) {
